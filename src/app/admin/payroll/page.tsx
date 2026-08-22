@@ -5,6 +5,7 @@ import Avatar from "@/components/ui/Avatar";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
 import Input from "@/components/ui/Input";
+import Select from "@/components/ui/Select";
 import PageHeader from "@/components/ui/PageHeader";
 import SearchInput from "@/components/ui/SearchInput";
 import EmptyState from "@/components/ui/EmptyState";
@@ -28,6 +29,11 @@ export default function AdminPayrollPage() {
   const [editing, setEditing] = useState<PayrollRecord | null>(null);
   const [editForm, setEditForm] = useState({ basicSalary: 0, hra: 0, allowances: 0, deductions: 0 });
   const [saving, setSaving] = useState(false);
+  const [showRun, setShowRun] = useState(false);
+  const [running, setRunning] = useState(false);
+  const [employees, setEmployees] = useState<Array<{ user?: { employeeId: string }; firstName: string; lastName: string; basicSalary?: number | null; deductions?: number | null }>>([]);
+  const [runForm, setRunForm] = useState({ employeeId: "", month: "", grossSalary: "", totalDeductions: "", paymentStatus: "PAID" });
+  const [runError, setRunError] = useState("");
 
   const fetchPayroll = useCallback(async () => {
     setLoading(true);
@@ -70,13 +76,59 @@ export default function AdminPayrollPage() {
     setSaving(false);
   };
 
+  const openRun = async () => {
+    setShowRun(true);
+    setRunError("");
+    setRunForm((f) => ({ ...f, month: new Date().toISOString().slice(0, 7) }));
+    if (employees.length === 0) {
+      try {
+        const res = await fetch("/api/employees");
+        const data = await res.json();
+        if (data.success && Array.isArray(data.data)) setEmployees(data.data);
+      } catch {}
+    }
+  };
+
+  const handleRunSubmit = async () => {
+    if (!runForm.employeeId || !runForm.month || runForm.grossSalary === "") {
+      setRunError("Employee, month and gross salary are required");
+      return;
+    }
+    setRunError("");
+    setRunning(true);
+    try {
+      const res = await fetch("/api/payroll", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          employeeId: runForm.employeeId,
+          month: runForm.month,
+          grossSalary: Number(runForm.grossSalary),
+          totalDeductions: runForm.totalDeductions === "" ? 0 : Number(runForm.totalDeductions),
+          paymentStatus: runForm.paymentStatus,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast("success", "Payroll record created");
+        setShowRun(false);
+        await fetchPayroll();
+      } else {
+        toast("error", data.error ?? "Failed to create payroll");
+      }
+    } catch {
+      toast("error", "Something went wrong");
+    }
+    setRunning(false);
+  };
+
   return (
     <div className="flex flex-col gap-gutter">
       <PageHeader title="Payroll Control" subtitle="Manage and process the current pay period.">
         <Button variant="secondary" onClick={() => toast("success", "Export coming soon")}>
           <Icon name="download" className="text-[18px]" /> Export
         </Button>
-        <Button arrow onClick={() => toast("success", "Run payroll coming soon")}>
+        <Button arrow onClick={openRun}>
           <Icon name="play_arrow" className="text-[18px]" /> Run Payroll
         </Button>
       </PageHeader>
@@ -163,6 +215,37 @@ export default function AdminPayrollPage() {
           </table>
         </section>
       )}
+
+      <Modal isOpen={showRun} onClose={() => setShowRun(false)} title="Run Payroll"
+        footer={<><Button variant="ghost" onClick={() => setShowRun(false)}>Cancel</Button><Button arrow onClick={handleRunSubmit} loading={running}>Create Record</Button></>}>
+        <div className="space-y-4">
+          {runError && <div className="bg-error-container text-on-error-container text-sm rounded px-4 py-3">{runError}</div>}
+          <Select label="Employee" value={runForm.employeeId} onChange={(e) => {
+            const selected = employees.find((emp) => (emp.user?.employeeId ?? "") === e.target.value);
+            setRunForm({
+              ...runForm,
+              employeeId: e.target.value,
+              grossSalary: selected?.basicSalary != null ? String(selected.basicSalary) : "",
+              totalDeductions: selected?.deductions != null ? String(selected.deductions) : "0",
+            });
+          }}>
+            <option value="">Select employee…</option>
+            {employees.map((emp) => {
+              const id = emp.user?.employeeId ?? "";
+              return <option key={id} value={id}>{`${emp.firstName} ${emp.lastName} (${id})`}</option>;
+            })}
+          </Select>
+          <Input type="month" label="Payroll Month" value={runForm.month} onChange={(e) => setRunForm({ ...runForm, month: e.target.value })} />
+          <div className="grid grid-cols-2 gap-4">
+            <Input type="number" label="Gross Salary" value={runForm.grossSalary} onChange={(e) => setRunForm({ ...runForm, grossSalary: e.target.value })} />
+            <Input type="number" label="Total Deductions" value={runForm.totalDeductions} onChange={(e) => setRunForm({ ...runForm, totalDeductions: e.target.value })} />
+          </div>
+          <Select label="Payment Status" value={runForm.paymentStatus} onChange={(e) => setRunForm({ ...runForm, paymentStatus: e.target.value })}>
+            <option value="PAID">Paid</option>
+            <option value="PENDING">Pending</option>
+          </Select>
+        </div>
+      </Modal>
 
       <Modal isOpen={showEdit} onClose={() => setShowEdit(false)} title={`Edit Payroll — ${editing?.employee?.firstName} ${editing?.employee?.lastName}`}
         footer={<><Button variant="ghost" onClick={() => setShowEdit(false)}>Cancel</Button><Button arrow onClick={handleSave} loading={saving}>Save Changes</Button></>}>

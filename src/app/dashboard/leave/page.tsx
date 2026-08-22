@@ -37,6 +37,8 @@ export default function LeavePage() {
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState("");
   const [form, setForm] = useState<{ type: LeaveType; startDate: string; endDate: string; remarks: string }>({ type: "PAID", startDate: "", endDate: "", remarks: "" });
+  const [cancelling, setCancelling] = useState<LeaveRecord | null>(null);
+  const [cancelLoading, setCancelLoading] = useState(false);
 
   const fetchLeaves = useCallback(async () => {
     setLoading(true);
@@ -77,6 +79,30 @@ export default function LeavePage() {
       else { setFormError(data.error ?? "Failed to submit request"); }
     } catch { setFormError("Something went wrong"); }
     setSubmitting(false);
+  };
+
+  const handleCancel = async () => {
+    if (!cancelling) return;
+    setCancelLoading(true);
+    try {
+      const res = await fetch("/api/leave", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ leaveRequestId: cancelling.id }),
+      });
+      const data = await res.json();
+      if (res.status === 401) { window.location.href = "/signin"; return; }
+      if (data.success) {
+        toast("success", "Leave request cancelled");
+        setCancelling(null);
+        await fetchLeaves();
+      } else {
+        toast("error", data.error ?? "Failed to cancel request");
+      }
+    } catch {
+      toast("error", "Something went wrong");
+    }
+    setCancelLoading(false);
   };
 
   const filters: { key: Filter; label: string }[] = [
@@ -143,7 +169,20 @@ export default function LeavePage() {
                     <td className="py-4 px-6 text-on-surface-variant">{fmtDate(leave.startDate)}</td>
                     <td className="py-4 px-6 text-on-surface-variant">{fmtDate(leave.endDate)}</td>
                     <td className="py-4 px-6 font-semibold text-primary">{daysBetween(leave.startDate, leave.endDate)}</td>
-                    <td className="py-4 px-6"><StatusBadge status={leave.status} /></td>
+                    <td className="py-4 px-6">
+                      <div className="flex items-center gap-2">
+                        <StatusBadge status={leave.status} />
+                        {leave.status === "PENDING" && (
+                          <button
+                            onClick={() => setCancelling(leave)}
+                            title="Cancel request"
+                            className="text-on-surface-variant hover:text-error transition-colors"
+                          >
+                            <Icon name="delete" className="text-[18px]" />
+                          </button>
+                        )}
+                      </div>
+                    </td>
                     <td className="py-4 px-6 text-secondary max-w-[220px] truncate">{leave.remarks || "—"}</td>
                   </tr>
                 ))}
@@ -152,6 +191,14 @@ export default function LeavePage() {
           </div>
         )}
       </div>
+
+      <Modal isOpen={!!cancelling} onClose={() => setCancelling(null)} title="Cancel Leave Request"
+        footer={<><Button variant="ghost" onClick={() => setCancelling(null)}>Keep Request</Button><Button onClick={handleCancel} loading={cancelLoading}>Cancel Request</Button></>}>
+        <p className="text-body-md text-secondary">
+          Cancel your {cancelling?.type?.toLowerCase() ?? ""} leave request for{" "}
+          {cancelling ? `${fmtDate(cancelling.startDate)} – ${fmtDate(cancelling.endDate)}` : ""}? This cannot be undone.
+        </p>
+      </Modal>
 
       <Modal isOpen={showApply} onClose={() => setShowApply(false)} title="Apply for Leave"
         footer={<><Button variant="ghost" onClick={() => setShowApply(false)}>Cancel</Button><Button arrow onClick={handleSubmit} loading={submitting} disabled={!canSubmit}>Submit Request</Button></>}>

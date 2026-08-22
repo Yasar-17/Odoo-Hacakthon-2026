@@ -1,18 +1,96 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Badge from "@/components/ui/Badge";
+import Button from "@/components/ui/Button";
+import Input from "@/components/ui/Input";
+import Select from "@/components/ui/Select";
+import Modal from "@/components/ui/Modal";
 import PageHeader from "@/components/ui/PageHeader";
 import EmptyState from "@/components/ui/EmptyState";
 import Icon from "@/components/ui/Icon";
+import { useToast } from "@/components/ui/Toast";
+
+interface EmployeeOption {
+  user?: { employeeId: string };
+  firstName: string;
+  lastName: string;
+}
 
 export default function AdminAttendancePage() {
+  const { toast } = useToast();
   const [records, setRecords] = useState<Record<string, unknown>[]>([]);
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetch(`/api/attendance?date=${date}`).then((r) => r.json()).then((d) => { if (d.success) setRecords(d.data || []); });
+  const [showMark, setShowMark] = useState(false);
+  const [employees, setEmployees] = useState<EmployeeOption[]>([]);
+  const [form, setForm] = useState({ employeeId: "", status: "PRESENT", checkIn: "", checkOut: "" });
+  const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState("");
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/attendance?date=${date}`);
+      if (res.status === 401) { window.location.href = "/signin"; return; }
+      const d = await res.json();
+      if (d.success) setRecords(d.data || []);
+    } catch {
+      setRecords([]);
+    }
+    setLoading(false);
   }, [date]);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  const openMark = async () => {
+    setShowMark(true);
+    setFormError("");
+    if (employees.length === 0) {
+      try {
+        const res = await fetch("/api/employees");
+        const d = await res.json();
+        if (d.success && Array.isArray(d.data)) setEmployees(d.data);
+      } catch {}
+    }
+  };
+
+  const handleMarkSubmit = async () => {
+    if (!form.employeeId) { setFormError("Select an employee"); return; }
+    if (form.status === "PRESENT" || form.status === "HALF_DAY") {
+      if ((form.checkIn && !form.checkOut) || (!form.checkIn && form.checkOut)) {
+        setFormError("Provide both check-in and check-out times");
+        return;
+      }
+    }
+    setFormError("");
+    setSaving(true);
+    try {
+      const res = await fetch("/api/attendance", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          employeeId: form.employeeId,
+          date,
+          status: form.status,
+          ...(form.checkIn ? { checkIn: form.checkIn } : {}),
+          ...(form.checkOut ? { checkOut: form.checkOut } : {}),
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast("success", "Attendance saved");
+        setShowMark(false);
+        await fetchData();
+      } else {
+        toast("error", data.error ?? "Failed to save attendance");
+      }
+    } catch {
+      toast("error", "Something went wrong");
+    }
+    setSaving(false);
+  };
 
   const statusVariant = (s: string) => {
     if (s === "PRESENT") return "success" as const;
@@ -29,9 +107,14 @@ export default function AdminAttendancePage() {
           <input type="date" value={date} onChange={(e) => setDate(e.target.value)}
             className="pl-10 pr-4 py-2.5 bg-surface-pure border border-border-light rounded-lg text-body-sm text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" />
         </div>
+        <Button arrow onClick={openMark}>
+          <Icon name="edit_calendar" className="text-[18px]" /> Mark Attendance
+        </Button>
       </PageHeader>
 
-      {records.length === 0 ? (
+      {loading ? (
+        <div className="bg-surface-pure border border-border-light rounded-lg p-6 animate-pulse h-40" />
+      ) : records.length === 0 ? (
         <div className="bg-surface-pure border border-border-light rounded-lg">
           <EmptyState icon="event_available" title="No attendance records" description="Nobody has checked in for this date yet." />
         </div>
@@ -62,6 +145,32 @@ export default function AdminAttendancePage() {
           </table>
         </section>
       )}
+
+      <Modal isOpen={showMark} onClose={() => setShowMark(false)} title={`Mark Attendance — ${date}`}
+        footer={<><Button variant="ghost" onClick={() => setShowMark(false)}>Cancel</Button><Button arrow onClick={handleMarkSubmit} loading={saving}>Save</Button></>}>
+        <div className="space-y-4">
+          {formError && <div className="bg-error-container text-on-error-container text-sm rounded px-4 py-3">{formError}</div>}
+          <Select label="Employee" value={form.employeeId} onChange={(e) => setForm({ ...form, employeeId: e.target.value })}>
+            <option value="">Select employee…</option>
+            {employees.map((emp) => {
+              const id = emp.user?.employeeId ?? "";
+              return <option key={id} value={id}>{`${emp.firstName} ${emp.lastName} (${id})`}</option>;
+            })}
+          </Select>
+          <Select label="Status" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
+            <option value="PRESENT">Present</option>
+            <option value="ABSENT">Absent</option>
+            <option value="HALF_DAY">Half Day</option>
+            <option value="LEAVE">Leave</option>
+          </Select>
+          {(form.status === "PRESENT" || form.status === "HALF_DAY") && (
+            <div className="grid grid-cols-2 gap-3">
+              <Input type="time" label="Check In" value={form.checkIn} onChange={(e) => setForm({ ...form, checkIn: e.target.value })} />
+              <Input type="time" label="Check Out" value={form.checkOut} onChange={(e) => setForm({ ...form, checkOut: e.target.value })} />
+            </div>
+          )}
+        </div>
+      </Modal>
     </div>
   );
 }
