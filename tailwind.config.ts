@@ -51,6 +51,8 @@ const config: Config = {
       spacing: {
         "page-desktop": "24px",
         "page-mobile": "16px",
+        sidebar: "260px",
+        topbar: "64px",
       },
       width: {
         sidebar: "260px",
