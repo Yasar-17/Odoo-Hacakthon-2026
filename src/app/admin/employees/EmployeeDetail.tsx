@@ -5,6 +5,7 @@ import Avatar from "@/components/ui/Avatar";
 import StatusBadge from "@/components/ui/StatusBadge";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
+import Modal from "@/components/ui/Modal";
 import EmptyState from "@/components/ui/EmptyState";
 import Icon from "@/components/ui/Icon";
 import { useToast } from "@/components/ui/Toast";
@@ -19,6 +20,14 @@ interface EmployeeRow {
   gender?: string | null; user?: { employeeId: string; email: string; role: string };
 }
 
+interface DocumentItem {
+  documentId: string;
+  documentType: string;
+  documentName: string;
+  documentUrl: string;
+  uploadedAt: string | null;
+}
+
 const tabs = ["Personal", "Job", "Salary", "Documents"] as const;
 type Tab = (typeof tabs)[number];
 
@@ -29,6 +38,14 @@ export default function EmployeeDetail({ employeeId, onBack }: { employeeId: str
   const [activeTab, setActiveTab] = useState<Tab>("Personal");
   const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [documents, setDocuments] = useState<DocumentItem[]>([]);
+  const [docsLoading, setDocsLoading] = useState(false);
+  const [showAddDoc, setShowAddDoc] = useState(false);
+  const [docForm, setDocForm] = useState({ documentType: "ID_PROOF", documentName: "", documentUrl: "" });
+  const [docSaving, setDocSaving] = useState(false);
+  const [showDeleteEmployee, setShowDeleteEmployee] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const form = useRef({
     firstName: "", lastName: "", phone: "", dateOfBirth: "", address: "", gender: "",
@@ -61,6 +78,98 @@ export default function EmployeeDetail({ employeeId, onBack }: { employeeId: str
   }, [employeeId]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
+
+  const fetchDocuments = useCallback(async () => {
+    if (!employeeId) return;
+    setDocsLoading(true);
+    try {
+      const res = await fetch(`/api/employees/documents?employeeId=${encodeURIComponent(employeeId)}`);
+      const data = await res.json();
+      if (data.success) setDocuments(data.data ?? []);
+    } catch {
+      setDocuments([]);
+    }
+    setDocsLoading(false);
+  }, [employeeId]);
+
+  useEffect(() => { fetchDocuments(); }, [fetchDocuments]);
+
+  const handleAddDoc = async () => {
+    if (!docForm.documentName.trim() || !docForm.documentUrl.trim() || !docForm.documentType.trim()) {
+      toast("error", "Type, name and file/URL are required");
+      return;
+    }
+    setDocSaving(true);
+    try {
+      const res = await fetch("/api/employees/documents", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ employeeId, ...docForm }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast("success", "Document added");
+        setShowAddDoc(false);
+        setDocForm({ documentType: docForm.documentType, documentName: "", documentUrl: "" });
+        await fetchDocuments();
+      } else {
+        toast("error", data.error ?? "Failed to add document");
+      }
+    } catch {
+      toast("error", "Something went wrong");
+    }
+    setDocSaving(false);
+  };
+
+  const handleDeleteDoc = async (documentId: string) => {
+    try {
+      const res = await fetch(`/api/employees/documents?documentId=${documentId}`, { method: "DELETE" });
+      const data = await res.json();
+      if (data.success) {
+        toast("success", "Document deleted");
+        await fetchDocuments();
+      } else {
+        toast("error", data.error ?? "Failed to delete document");
+      }
+    } catch {
+      toast("error", "Something went wrong");
+    }
+  };
+
+  const handleDeleteEmployee = async () => {
+    setDeleteLoading(true);
+    try {
+      const res = await fetch("/api/employees", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ employeeId }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast("success", "Employee deleted");
+        setShowDeleteEmployee(false);
+        onBack();
+      } else {
+        toast("error", data.error ?? "Failed to delete employee");
+      }
+    } catch {
+      toast("error", "Something went wrong");
+    }
+    setDeleteLoading(false);
+  };
+
+  const handleDocFilePick = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setDocForm((f) => ({
+      ...f,
+      documentName: f.documentName || file.name,
+      documentUrl: "",
+    }));
+    const reader = new FileReader();
+    reader.onload = () => setDocForm((f) => ({ ...f, documentUrl: reader.result as string }));
+    reader.readAsDataURL(file);
+  };
 
   const handleFilePick = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -178,9 +287,50 @@ export default function EmployeeDetail({ employeeId, onBack }: { employeeId: str
             </div>
           )}
           {activeTab === "Documents" && (
-            <EmptyState icon="folder" title="No documents uploaded yet" description="ID proofs and contracts will appear here." />
+            <div className="max-w-3xl">
+              <div className="flex justify-end mb-4">
+                <Button size="sm" onClick={() => setShowAddDoc(true)}>
+                  <Icon name="upload_file" className="text-[18px]" /> Add Document
+                </Button>
+              </div>
+              {docsLoading ? (
+                <div className="py-10 text-center text-body-sm text-secondary animate-pulse">Loading documents…</div>
+              ) : documents.length === 0 ? (
+                <EmptyState icon="folder" title="No documents uploaded yet" description="ID proofs and contracts will appear here." />
+              ) : (
+                <ul>
+                  {documents.map((doc, i) => (
+                    <li key={doc.documentId} className={`flex items-center gap-3 py-3.5 ${i < documents.length - 1 ? "border-b border-border-light" : ""}`}>
+                      <div className="w-9 h-9 rounded-lg bg-surface-container-low text-primary flex items-center justify-center shrink-0">
+                        <Icon name="description" className="text-[20px]" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-body-md font-medium text-primary truncate">{doc.documentName}</p>
+                        <p className="text-label-md text-on-surface-variant">
+                          {doc.documentType}
+                          {doc.uploadedAt ? ` · Uploaded ${new Date(doc.uploadedAt).toLocaleDateString()}` : ""}
+                        </p>
+                      </div>
+                      {doc.documentUrl && !doc.documentUrl.startsWith("data:") && (
+                        <a href={doc.documentUrl} target="_blank" rel="noreferrer" title="Download"
+                          className="w-8 h-8 flex items-center justify-center rounded-lg text-secondary hover:text-primary hover:bg-surface-container-low transition-colors">
+                          <Icon name="download" className="text-[18px]" />
+                        </a>
+                      )}
+                      <button onClick={() => handleDeleteDoc(doc.documentId)} title="Delete"
+                        className="w-8 h-8 flex items-center justify-center rounded-lg text-secondary hover:text-error hover:bg-surface-container-low transition-colors">
+                        <Icon name="delete" className="text-[18px]" />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           )}
           <div className="flex flex-wrap justify-end gap-3 pt-6 border-t border-border-light mt-6">
+            <Button variant="ghost" onClick={() => setShowDeleteEmployee(true)}>
+              <Icon name="person_remove" className="text-[18px]" /> Delete Employee
+            </Button>
             <Button variant="secondary" onClick={() => handleSave(["profilePicture"])} loading={saving}>Save Photo</Button>
             <Button variant="secondary" onClick={() => handleSave(["phone", "address", "dateOfBirth", "gender"])} loading={saving}>Save Personal</Button>
             <Button variant="secondary" onClick={() => handleSave(["department", "designation", "employmentType"])} loading={saving}>Save Job</Button>
@@ -188,6 +338,31 @@ export default function EmployeeDetail({ employeeId, onBack }: { employeeId: str
           </div>
         </div>
       </div>
+
+      <Modal isOpen={showAddDoc} onClose={() => setShowAddDoc(false)} title="Add Document"
+        footer={<><Button variant="ghost" onClick={() => setShowAddDoc(false)}>Cancel</Button><Button arrow onClick={handleAddDoc} loading={docSaving}>Add</Button></>}>
+        <div className="space-y-4">
+          <Input label="Document Type" value={docForm.documentType} onChange={(e) => setDocForm({ ...docForm, documentType: e.target.value })} placeholder="ID_PROOF, CONTRACT…" />
+          <Input label="Document Name" value={docForm.documentName} onChange={(e) => setDocForm({ ...docForm, documentName: e.target.value })} placeholder="passport.pdf" />
+          <div>
+            <label className="block text-label-md uppercase tracking-wider text-secondary mb-2">File or URL</label>
+            <input type="file" onChange={handleDocFilePick}
+              className="w-full text-body-sm text-secondary file:mr-3 file:px-4 file:py-2 file:rounded file:border-0 file:bg-surface-container-low file:text-primary file:cursor-pointer" />
+            {!docForm.documentUrl && (
+              <input type="url" value={docForm.documentUrl} onChange={(e) => setDocForm({ ...docForm, documentUrl: e.target.value })}
+                placeholder="or paste a document URL"
+                className="mt-2 w-full bg-surface-pure border border-border-light px-4 py-2.5 rounded text-body-sm text-primary focus:outline-none focus:border-primary transition-colors" />
+            )}
+          </div>
+        </div>
+      </Modal>
+
+      <Modal isOpen={showDeleteEmployee} onClose={() => setShowDeleteEmployee(false)} title="Delete Employee"
+        footer={<><Button variant="ghost" onClick={() => setShowDeleteEmployee(false)}>Cancel</Button><Button onClick={handleDeleteEmployee} loading={deleteLoading}>Delete Permanently</Button></>}>
+        <p className="text-body-md text-secondary">
+          Delete {employee?.firstName} {employee?.lastName} ({employeeId}) and all associated records? This cannot be undone.
+        </p>
+      </Modal>
     </div>
   );
 }

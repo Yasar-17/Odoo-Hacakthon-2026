@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Avatar from "@/components/ui/Avatar";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
+import Modal from "@/components/ui/Modal";
 import EmptyState from "@/components/ui/EmptyState";
 import Icon from "@/components/ui/Icon";
 import { useToast } from "@/components/ui/Toast";
@@ -13,7 +14,15 @@ interface EmployeeData {
   department?: string | null; designation?: string | null; dateOfBirth?: string | null;
   dateOfJoining: string; employmentType?: string | null; phone?: string | null;
   address?: string | null; profilePicture?: string | null; basicSalary?: number | null;
-  hra?: number | null; allowances?: number | null; deductions?: number | null; documents?: string | null;
+  hra?: number | null; allowances?: number | null; deductions?: number | null;
+}
+
+interface DocumentItem {
+  documentId: string;
+  documentType: string;
+  documentName: string;
+  documentUrl: string;
+  uploadedAt: string | null;
 }
 
 const tabs = ["Personal Details", "Job Details", "Salary Structure", "Documents"] as const;
@@ -48,10 +57,29 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({ phone: "", address: "", profilePicture: "" });
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [documents, setDocuments] = useState<DocumentItem[]>([]);
+  const [docsLoading, setDocsLoading] = useState(false);
+  const [showAddDoc, setShowAddDoc] = useState(false);
+  const [docForm, setDocForm] = useState({ documentType: "ID_PROOF", documentName: "", documentUrl: "" });
+  const [docSaving, setDocSaving] = useState(false);
+
+  const fetchDocuments = useCallback(async () => {
+    setDocsLoading(true);
+    try {
+      const res = await fetch("/api/employees/documents");
+      if (res.status === 401) { window.location.href = "/signin"; return; }
+      const data = await res.json();
+      if (data.success) setDocuments(data.data ?? []);
+    } catch {
+      setDocuments([]);
+    }
+    setDocsLoading(false);
+  }, []);
 
   useEffect(() => {
     fetch("/api/employees").then((r) => r.json()).then((d) => { if (d.success) setEmployee(d.data); setLoading(false); }).catch(() => setLoading(false));
-  }, []);
+    fetchDocuments();
+  }, [fetchDocuments]);
 
   const startEdit = () => { setForm({ phone: employee?.phone ?? "", address: employee?.address ?? "", profilePicture: employee?.profilePicture ?? "" }); setEditing(true); };
 
@@ -87,6 +115,57 @@ export default function ProfilePage() {
       }
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleDocFilePick = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setDocForm((f) => ({ ...f, documentName: f.documentName || file.name, documentUrl: "" }));
+    const reader = new FileReader();
+    reader.onload = () => setDocForm((f) => ({ ...f, documentUrl: reader.result as string }));
+    reader.readAsDataURL(file);
+  };
+
+  const handleAddDoc = async () => {
+    if (!docForm.documentType.trim() || !docForm.documentName.trim() || !docForm.documentUrl.trim()) {
+      toast("error", "Type, name and file/URL are required");
+      return;
+    }
+    setDocSaving(true);
+    try {
+      const res = await fetch("/api/employees/documents", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(docForm),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast("success", "Document added");
+        setShowAddDoc(false);
+        setDocForm({ documentType: docForm.documentType, documentName: "", documentUrl: "" });
+        await fetchDocuments();
+      } else {
+        toast("error", data.error ?? "Failed to add document");
+      }
+    } catch {
+      toast("error", "Something went wrong");
+    }
+    setDocSaving(false);
+  };
+
+  const handleDeleteDoc = async (documentId: string) => {
+    try {
+      const res = await fetch(`/api/employees/documents?documentId=${documentId}`, { method: "DELETE" });
+      const data = await res.json();
+      if (data.success) {
+        toast("success", "Document deleted");
+        await fetchDocuments();
+      } else {
+        toast("error", data.error ?? "Failed to delete document");
+      }
+    } catch {
+      toast("error", "Something went wrong");
+    }
   };
 
   if (loading) return <div className="bg-surface-pure rounded-xl border border-border-light p-6 animate-pulse h-96" />;
@@ -189,10 +268,66 @@ export default function ProfilePage() {
             </div>
           )}
           {activeTab === "Documents" && (
-            <EmptyState icon="folder" title="No documents uploaded yet" description="ID proofs and contracts shared by HR will appear here." />
+            <div className="max-w-3xl">
+              <div className="flex justify-end mb-4">
+                <Button size="sm" onClick={() => setShowAddDoc(true)}>
+                  <Icon name="upload_file" className="text-[18px]" /> Add Document
+                </Button>
+              </div>
+              {docsLoading ? (
+                <div className="py-10 text-center text-body-sm text-secondary animate-pulse">Loading documents…</div>
+              ) : documents.length === 0 ? (
+                <EmptyState icon="folder" title="No documents uploaded yet" description="ID proofs and contracts shared by HR will appear here." />
+              ) : (
+                <ul>
+                  {documents.map((doc, i) => (
+                    <li key={doc.documentId} className={`flex items-center gap-3 py-3.5 ${i < documents.length - 1 ? "border-b border-border-light" : ""}`}>
+                      <div className="w-9 h-9 rounded-lg bg-surface-container-low text-primary flex items-center justify-center shrink-0">
+                        <Icon name="description" className="text-[20px]" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-body-md font-medium text-primary truncate">{doc.documentName}</p>
+                        <p className="text-label-md text-on-surface-variant">
+                          {doc.documentType}
+                          {doc.uploadedAt ? ` · Uploaded ${new Date(doc.uploadedAt).toLocaleDateString()}` : ""}
+                        </p>
+                      </div>
+                      {doc.documentUrl && !doc.documentUrl.startsWith("data:") && (
+                        <a href={doc.documentUrl} target="_blank" rel="noreferrer" title="Download"
+                          className="w-8 h-8 flex items-center justify-center rounded-lg text-secondary hover:text-primary hover:bg-surface-container-low transition-colors">
+                          <Icon name="download" className="text-[18px]" />
+                        </a>
+                      )}
+                      <button onClick={() => handleDeleteDoc(doc.documentId)} title="Delete"
+                        className="w-8 h-8 flex items-center justify-center rounded-lg text-secondary hover:text-error hover:bg-surface-container-low transition-colors">
+                        <Icon name="delete" className="text-[18px]" />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           )}
         </div>
       </div>
+
+      <Modal isOpen={showAddDoc} onClose={() => setShowAddDoc(false)} title="Add Document"
+        footer={<><Button variant="ghost" onClick={() => setShowAddDoc(false)}>Cancel</Button><Button arrow onClick={handleAddDoc} loading={docSaving}>Add</Button></>}>
+        <div className="space-y-4">
+          <Input label="Document Type" value={docForm.documentType} onChange={(e) => setDocForm({ ...docForm, documentType: e.target.value })} placeholder="ID_PROOF, CONTRACT…" />
+          <Input label="Document Name" value={docForm.documentName} onChange={(e) => setDocForm({ ...docForm, documentName: e.target.value })} placeholder="passport.pdf" />
+          <div>
+            <label className="block text-label-md uppercase tracking-wider text-secondary mb-2">File or URL</label>
+            <input type="file" onChange={handleDocFilePick}
+              className="w-full text-body-sm text-secondary file:mr-3 file:px-4 file:py-2 file:rounded file:border-0 file:bg-surface-container-low file:text-primary file:cursor-pointer" />
+            {!docForm.documentUrl && (
+              <input type="url" value={docForm.documentUrl} onChange={(e) => setDocForm({ ...docForm, documentUrl: e.target.value })}
+                placeholder="or paste a document URL"
+                className="mt-2 w-full bg-surface-pure border border-border-light px-4 py-2.5 rounded text-body-sm text-primary focus:outline-none focus:border-primary transition-colors" />
+            )}
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
