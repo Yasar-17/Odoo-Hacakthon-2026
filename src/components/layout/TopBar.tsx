@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import Icon from "@/components/ui/Icon";
+import NotificationBell from "./NotificationBell";
 
 const pageTitles: Record<string, string> = {
   "/dashboard": "Dashboard",
@@ -40,9 +41,7 @@ export default function TopBar({ onHamburgerClick, isAdmin }: TopBarProps) {
         <span className="font-headline text-headline-lg-mobile font-bold text-primary">{title}</span>
       </div>
       <div className="flex items-center gap-2">
-        <button className="text-primary p-2 hover:bg-surface-container-low rounded-full transition-colors">
-          <Icon name="notifications" className="text-[22px]" />
-        </button>
+        <NotificationBell isAdmin={isAdmin} />
         <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center">
           <span className="text-on-primary font-bold text-sm font-headline">D</span>
         </div>
