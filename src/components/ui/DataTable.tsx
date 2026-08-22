@@ -77,7 +77,7 @@ export default function DataTable<T extends Record<string, unknown>>({
   };
 
   return (
-    <div className="bg-white rounded-xl border border-surface-200 shadow-sm">
+    <div className="bg-white rounded-xl border border-surface-200">
       {searchKey && (
         <div className="px-5 py-3">
           <div className="relative max-w-sm">
@@ -102,7 +102,7 @@ export default function DataTable<T extends Record<string, unknown>>({
                 setSearch(e.target.value);
                 setPage(1);
               }}
-              className="w-full pl-10 pr-4 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              className="w-full pl-10 pr-4 py-2 text-sm border border-surface-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-surface-900 focus:border-surface-900"
             />
           </div>
         </div>

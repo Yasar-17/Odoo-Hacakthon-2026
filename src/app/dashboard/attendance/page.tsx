@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import StatusBadge from "@/components/ui/StatusBadge";
 import Button from "@/components/ui/Button";
+import EmptyState from "@/components/ui/EmptyState";
 import { useToast } from "@/components/ui/Toast";
 
 interface AttendanceRecord {
@@ -166,7 +167,7 @@ export default function AttendancePage() {
             value={selectedDate}
             max={todayISO}
             onChange={(e) => setSelectedDate(e.target.value)}
-            className="px-3 py-2 border border-surface-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-primary-600"
+            className="px-3 py-2 border border-surface-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-surface-900 focus:border-surface-900"
           />
         ) : (
           <div className="inline-flex items-center gap-1 bg-white border border-surface-300 rounded-lg px-1 py-1">
@@ -193,8 +194,8 @@ export default function AttendancePage() {
 
       {/* Check-in/out block — daily view only */}
       {view === "daily" && (
-        <div className="bg-white rounded-xl border border-surface-200 shadow-sm py-10 px-6 flex flex-col items-center text-center">
-          <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 ${hasCheckedIn ? "bg-success-light text-success-text" : "bg-primary-50 text-primary-700"}`}>
+        <div className="bg-white rounded-xl border border-surface-200 py-10 px-6 flex flex-col items-center text-center">
+          <div className={`w-12 h-12 rounded-lg flex items-center justify-center mb-4 ${hasCheckedIn ? "bg-success-light text-success-text" : "bg-surface-900 text-white"}`}>
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
@@ -238,18 +239,19 @@ export default function AttendancePage() {
       )}
 
       {/* Table card */}
-      <div className="bg-white rounded-xl border border-surface-200 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-xl border border-surface-200 overflow-hidden">
         {loading ? (
           <div className="py-16 text-center text-sm text-surface-400">Loading…</div>
         ) : records.length === 0 ? (
-          <div className="py-16 flex flex-col items-center justify-center text-center px-6">
-            <div className="w-12 h-12 rounded-full bg-surface-100 flex items-center justify-center text-surface-300 mb-3">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <EmptyState
+            icon={
+              <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
-            </div>
-            <p className="text-sm text-surface-400">No attendance records yet</p>
-          </div>
+            }
+            title="No attendance records yet"
+            description="Your check-ins will appear here once you start logging time."
+          />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -282,7 +284,7 @@ export default function AttendancePage() {
                         <td className="px-5 py-3.5 text-surface-900">
                           {date.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })}
                           {toISODate(date) === todayISO && (
-                            <span className="ml-2 text-xs text-primary-700 font-medium">Today</span>
+                            <span className="ml-2 text-xs text-surface-900 font-medium">Today</span>
                           )}
                         </td>
                         <td className="px-5 py-3.5 font-mono text-surface-600">{formatTime(record?.checkIn ?? null)}</td>

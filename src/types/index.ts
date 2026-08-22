@@ -1,4 +1,4 @@
-export type { User, Employee, Attendance, LeaveRequest, Payroll } from "@prisma/client";
+export type { User, Employee, Attendance, LeaveRequest, payroll_records } from "@prisma/client";
 
 export interface ApiResponse<T = unknown> {
   success: boolean;
@@ -8,17 +8,17 @@ export interface ApiResponse<T = unknown> {
 }
 
 export interface AuthUser {
-  id: string;
+  userId: string;
   employeeId: string;
   email: string;
   role: "EMPLOYEE" | "ADMIN";
   employee?: {
-    id: string;
+    employeeId: string;
     firstName: string;
     lastName: string;
-    department?: string | null;
-    designation?: string | null;
-    profilePicture?: string | null;
+    departmentId?: number | null;
+    positionId?: number | null;
+    profilePictureUrl?: string | null;
   };
 }
 
@@ -32,12 +32,12 @@ export interface AttendanceRecord {
 
 export interface LeaveRequestData {
   id: string;
-  type: "PAID" | "SICK" | "UNPAID";
+  type: string;
   startDate: string;
   endDate: string;
-  remarks?: string | null;
+  reason?: string | null;
   status: "PENDING" | "APPROVED" | "REJECTED";
-  adminComments?: string | null;
+  comments?: string | null;
   createdAt: string;
   employee?: {
     firstName: string;
@@ -48,35 +48,26 @@ export interface LeaveRequestData {
 
 export interface PayrollData {
   id: string;
-  basicSalary: number;
-  hra: number;
-  allowances: number;
-  deductions: number;
+  grossSalary: number;
+  totalDeductions: number;
   netSalary: number;
-  month: number;
-  year: number;
-  status: string;
+  payrollMonth: string;
+  paymentStatus: string;
 }
 
 export interface EmployeeData {
-  id: string;
+  employeeId: string;
   userId: string;
   firstName: string;
   lastName: string;
-  department?: string | null;
-  designation?: string | null;
+  departmentId?: number | null;
+  positionId?: number | null;
   phone?: string | null;
   address?: string | null;
-  profilePicture?: string | null;
-  basicSalary?: number | null;
-  hra?: number | null;
-  allowances?: number | null;
-  deductions?: number | null;
-  employmentType?: string | null;
-  dateOfJoining: string;
+  profilePictureUrl?: string | null;
+  employmentStatus?: string | null;
   user: {
     employeeId: string;
     email: string;
-    role: string;
   };
 }

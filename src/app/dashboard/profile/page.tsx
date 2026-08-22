@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Avatar from "@/components/ui/Avatar";
 import Button from "@/components/ui/Button";
+import EmptyState from "@/components/ui/EmptyState";
 import { useToast } from "@/components/ui/Toast";
 
 interface EmployeeData {
@@ -151,7 +152,7 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="bg-white rounded-xl border border-surface-200 shadow-sm p-6 animate-pulse flex items-center gap-5">
+        <div className="bg-white rounded-xl border border-surface-200 p-6 animate-pulse flex items-center gap-5">
           <div className="w-[120px] h-[120px] rounded-full bg-surface-200 shrink-0" />
           <div className="space-y-3 flex-1">
             <div className="h-6 bg-surface-200 rounded w-1/3" />
@@ -159,7 +160,7 @@ export default function ProfilePage() {
             <div className="h-3 bg-surface-100 rounded w-1/2" />
           </div>
         </div>
-        <div className="bg-white rounded-xl border border-surface-200 shadow-sm p-6 animate-pulse">
+        <div className="bg-white rounded-xl border border-surface-200 p-6 animate-pulse">
           <div className="h-10 bg-surface-100 rounded w-full max-w-md mb-6" />
           <div className="grid grid-cols-2 gap-5">
             {[1, 2, 3, 4].map((n) => <div key={n} className="h-14 bg-surface-100 rounded-lg" />)}
@@ -171,8 +172,8 @@ export default function ProfilePage() {
 
   if (!employee) {
     return (
-      <div className="bg-white rounded-xl border border-surface-200 shadow-sm py-20 text-center">
-        <p className="text-sm text-surface-400">Could not load your profile.</p>
+      <div className="bg-white rounded-xl border border-surface-200 py-20 text-center">
+        <p className="text-sm text-surface-500">Could not load your profile.</p>
       </div>
     );
   }
@@ -200,7 +201,7 @@ export default function ProfilePage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white rounded-xl border border-surface-200 shadow-sm p-6">
+      <div className="bg-white rounded-xl border border-surface-200 p-6">
         <div className="flex flex-col sm:flex-row sm:items-start gap-5">
           {/* Photo */}
           <div
@@ -242,7 +243,7 @@ export default function ProfilePage() {
       </div>
 
       {/* Tabs */}
-      <div className="bg-white rounded-xl border border-surface-200 shadow-sm">
+      <div className="bg-white rounded-xl border border-surface-200">
         <div className="border-b border-surface-200 px-6">
           <nav className="flex gap-6 overflow-x-auto">
             {tabs.map((tab) => (
@@ -251,7 +252,7 @@ export default function ProfilePage() {
                 onClick={() => setActiveTab(tab)}
                 className={`py-3.5 text-sm whitespace-nowrap border-b-2 -mb-px transition-colors ${
                   activeTab === tab
-                    ? "border-primary-700 text-surface-900 font-semibold"
+                    ? "border-surface-900 text-surface-900 font-semibold"
                     : "border-transparent text-surface-500 hover:text-surface-700"
                 }`}
               >
@@ -278,7 +279,7 @@ export default function ProfilePage() {
                       value={form.phone}
                       onChange={(e) => setForm({ ...form, phone: e.target.value })}
                       placeholder="+91 ..."
-                      className="w-full px-3 py-2 border border-surface-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-primary-600"
+                      className="w-full px-3 py-2 border border-surface-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-surface-900 focus:border-surface-900"
                     />
                   </div>
                   <div className="md:col-span-2">
@@ -288,7 +289,7 @@ export default function ProfilePage() {
                       value={form.address}
                       onChange={(e) => setForm({ ...form, address: e.target.value })}
                       placeholder="Street, City, State, PIN"
-                      className="w-full px-3 py-2 border border-surface-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-primary-600 resize-none"
+                      className="w-full px-3 py-2 border border-surface-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-surface-900 focus:border-surface-900 resize-none"
                     />
                   </div>
                 </>
@@ -345,20 +346,20 @@ export default function ProfilePage() {
           {activeTab === "Documents" && (
             <div className="max-w-3xl">
               {documents.length === 0 ? (
-                <div className="py-16 flex flex-col items-center justify-center text-center">
-                  <div className="w-12 h-12 rounded-full bg-surface-100 flex items-center justify-center text-surface-300 mb-3">
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <EmptyState
+                  icon={
+                    <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                     </svg>
-                  </div>
-                  <p className="text-sm text-surface-400">No documents uploaded yet</p>
-                  <p className="text-xs text-surface-300 mt-1">ID proofs and contracts shared by HR will appear here</p>
-                </div>
+                  }
+                  title="No documents uploaded yet"
+                  description="ID proofs and contracts shared by HR will appear here."
+                />
               ) : (
                 <ul>
                   {documents.map((doc, i) => (
                     <li key={i} className={`flex items-center gap-3 py-3.5 ${i < documents.length - 1 ? "border-b border-surface-100" : ""}`}>
-                      <div className="w-9 h-9 rounded-lg bg-info-light text-info-text flex items-center justify-center shrink-0">
+                      <div className="w-9 h-9 rounded-lg bg-surface-100 text-surface-700 flex items-center justify-center shrink-0">
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                         </svg>

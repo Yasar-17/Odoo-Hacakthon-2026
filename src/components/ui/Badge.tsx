@@ -5,10 +5,10 @@ interface BadgeProps {
 }
 
 const variants: Record<string, string> = {
-  success: "bg-accent-100 text-accent-700",
-  warning: "bg-amber-100 text-amber-700",
-  danger: "bg-red-100 text-red-700",
-  info: "bg-primary-100 text-primary-700",
+  success: "bg-success-light text-success-text",
+  warning: "bg-warning-light text-warning-text",
+  danger: "bg-danger-light text-danger-text",
+  info: "bg-info-light text-info-text",
   default: "bg-surface-100 text-surface-600",
 };
 

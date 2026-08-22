@@ -85,7 +85,7 @@ export default function Sidebar({ isAdmin, mobileOpen, onMobileClose }: SidebarP
               onClick={onMobileClose}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors relative ${
                 isActive
-                  ? "bg-primary-50 text-primary-700 before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-[3px] before:bg-primary-600 before:rounded-r"
+                  ? "bg-surface-900 text-white before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-[3px] before:bg-accent-500 before:rounded-r"
                   : "text-surface-500 hover:bg-surface-100 hover:text-surface-800"
               }`}
             >

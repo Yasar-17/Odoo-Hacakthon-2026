@@ -5,7 +5,7 @@ import { hashPassword, signToken, validatePassword, validateEmail } from "@/lib/
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { employeeId, email, password, role, firstName, lastName, department, designation } = body;
+    const { employeeId, email, password, role } = body;
 
     if (!employeeId || !email || !password) {
       return NextResponse.json(
@@ -41,39 +41,46 @@ export async function POST(req: NextRequest) {
     }
 
     const passwordHash = await hashPassword(password);
+    const desiredRole = role === "ADMIN" ? "ADMIN" : "EMPLOYEE";
 
     const user = await prisma.user.create({
       data: {
         employeeId,
         email,
         passwordHash,
-        role: role === "ADMIN" ? "ADMIN" : "EMPLOYEE",
         employee: {
           create: {
-            firstName: firstName || "New",
-            lastName: lastName || "Employee",
-            ...(department ? { department } : {}),
-            ...(designation ? { designation } : {}),
+            firstName: body.firstName || "New",
+            lastName: body.lastName || "Employee",
           },
         },
       },
       include: { employee: true },
     });
 
+    const roleRecord = await prisma.role.findFirst({
+      where: { roleName: desiredRole },
+    });
+    if (roleRecord) {
+      await prisma.userRole.create({
+        data: { userId: user.userId, roleId: roleRecord.roleId },
+      });
+    }
+
     const token = signToken({
-      userId: user.id,
+      userId: user.userId.toString(),
       employeeId: user.employeeId,
       email: user.email,
-      role: (user.role as "EMPLOYEE" | "ADMIN") || "EMPLOYEE",
+      role: desiredRole,
     });
 
     const response = NextResponse.json({
       success: true,
       data: {
-        id: user.id,
+        userId: user.userId.toString(),
         employeeId: user.employeeId,
         email: user.email,
-        role: user.role,
+        role: desiredRole,
       },
     });
 

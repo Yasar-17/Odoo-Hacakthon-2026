@@ -1,6 +1,164 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { getUserFromRequest } from "@/lib/auth";
+import { getUserFromRequest, hashPassword, validateEmail, validatePassword } from "@/lib/auth";
+
+function isDuplicateError(error: unknown): boolean {
+  return (
+    error instanceof Prisma.PrismaClientKnownRequestError &&
+    (error.code === "P2002" || error.code === "P2025")
+  );
+}
+
+function parseOptionalDate(value: unknown): Date | undefined {
+  if (value === null || value === undefined || value === "") return undefined;
+  const date = new Date(String(value));
+  return Number.isNaN(date.getTime()) ? undefined : date;
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const authUser = await getUserFromRequest(req);
+    if (!authUser) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
+
+    if (authUser.role !== "ADMIN") {
+      return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
+    }
+
+    const body = await req.json();
+    const {
+      employeeId,
+      email,
+      password,
+      role,
+      firstName,
+      lastName,
+      dateOfBirth,
+      gender,
+      phone,
+      address,
+    } = body;
+
+    if (!employeeId || !email || !password || !firstName || !lastName) {
+      return NextResponse.json(
+        { success: false, error: "employeeId, email, password, firstName, and lastName are required" },
+        { status: 400 }
+      );
+    }
+
+    if (!validateEmail(email)) {
+      return NextResponse.json(
+        { success: false, error: "Invalid email format" },
+        { status: 400 }
+      );
+    }
+
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.valid) {
+      return NextResponse.json(
+        { success: false, error: passwordValidation.error },
+        { status: 400 }
+      );
+    }
+
+    const existingUser = await prisma.user.findFirst({
+      where: { OR: [{ email }, { employeeId }] },
+    });
+
+    if (existingUser) {
+      const conflictField =
+        existingUser.employeeId === employeeId ? "Employee ID" : "Email";
+      return NextResponse.json(
+        { success: false, error: `${conflictField} already exists` },
+        { status: 409 }
+      );
+    }
+
+    const passwordHash = await hashPassword(password);
+    const dob = parseOptionalDate(dateOfBirth);
+
+    const result = await prisma.$transaction(async (tx) => {
+      const user = await tx.user.create({
+        data: {
+          employeeId,
+          email,
+          passwordHash,
+          employee: {
+            create: {
+              firstName,
+              lastName,
+              ...(dob ? { dateOfBirth: dob } : {}),
+              ...(gender ? { gender } : {}),
+              ...(phone ? { phone } : {}),
+              ...(address ? { address } : {}),
+            },
+          },
+        },
+        include: { employee: true },
+      });
+      return user;
+    });
+
+    const desiredRole = role === "ADMIN" ? "ADMIN" : "EMPLOYEE";
+    const roleRecord = await prisma.role.findFirst({
+      where: { roleName: desiredRole },
+    });
+    if (roleRecord) {
+      await prisma.userRole.create({
+        data: { userId: result.userId, roleId: roleRecord.roleId },
+      });
+    }
+
+    return NextResponse.json({ success: true, data: result }, { status: 201 });
+  } catch (error) {
+    console.error("POST employees error:", error);
+    if (isDuplicateError(error)) {
+      return NextResponse.json(
+        { success: false, error: "User with this email or employee ID already exists" },
+        { status: 409 }
+      );
+    }
+    return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const authUser = await getUserFromRequest(req);
+    if (!authUser) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
+
+    if (authUser.role !== "ADMIN") {
+      return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
+    }
+
+    const body = await req.json();
+    const { employeeId } = body;
+
+    if (!employeeId) {
+      return NextResponse.json({ success: false, error: "employeeId is required" }, { status: 400 });
+    }
+
+    const targetUser = await prisma.user.findUnique({ where: { employeeId } });
+
+    if (!targetUser) {
+      return NextResponse.json({ success: false, error: "Employee not found" }, { status: 404 });
+    }
+
+    await prisma.user.delete({ where: { userId: targetUser.userId } });
+
+    return NextResponse.json({
+      success: true,
+      data: { message: "Employee deleted successfully" },
+    });
+  } catch (error) {
+    console.error("DELETE employees error:", error);
+    return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 });
+  }
+}
 
 export async function GET(req: NextRequest) {
   try {
@@ -11,16 +169,30 @@ export async function GET(req: NextRequest) {
 
     if (user.role === "ADMIN") {
       const employees = await prisma.employee.findMany({
-        include: { user: { select: { employeeId: true, email: true, role: true } } },
+        include: {
+          user: {
+            select: {
+              employeeId: true,
+              email: true,
+              userRoles: { include: { role: true } },
+            },
+          },
+        },
         orderBy: { firstName: "asc" },
       });
-      return NextResponse.json({ success: true, data: employees });
+      const enriched = employees.map((emp) => {
+        const userRole = emp.user?.userRoles?.[0]?.role?.roleName?.toUpperCase();
+        return {
+          ...emp,
+          user: emp.user
+            ? { ...emp.user, role: userRole ?? "EMPLOYEE", userRoles: undefined }
+            : null,
+        };
+      });
+      return NextResponse.json({ success: true, data: enriched });
     }
 
-    const employee = await prisma.employee.findUnique({
-      where: { userId: user.id },
-      include: { user: { select: { employeeId: true, email: true, role: true } } },
-    });
+    const employee = user.employee;
 
     if (!employee) {
       return NextResponse.json({ success: false, error: "Employee not found" }, { status: 404 });
@@ -43,23 +215,22 @@ export async function PATCH(req: NextRequest) {
     const body = await req.json();
     const { employeeId, ...updates } = body;
 
-    let targetUserId = user.id;
+    let targetUserId = user.userId;
 
     if (employeeId && user.role === "ADMIN") {
       const targetUser = await prisma.user.findUnique({ where: { employeeId } });
       if (!targetUser) {
         return NextResponse.json({ success: false, error: "Employee not found" }, { status: 404 });
       }
-      targetUserId = targetUser.id;
+      targetUserId = targetUser.userId;
     } else if (employeeId && user.role !== "ADMIN") {
       return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
     }
 
-    const allowedEmployeeFields = ["address", "phone", "profilePicture"];
+    const allowedEmployeeFields = ["address", "phone", "profilePictureUrl"];
     const adminFields = [
-      "firstName", "lastName", "department", "designation", "phone", "address",
-      "profilePicture", "basicSalary", "hra", "allowances", "deductions",
-      "employmentType", "gender", "dateOfBirth", "bankName", "bankAccountNo", "ifscCode",
+      "firstName", "lastName", "phone", "address",
+      "profilePictureUrl", "gender", "dateOfBirth", "employmentStatus",
     ];
 
     const fieldsToUpdate =
@@ -75,7 +246,7 @@ export async function PATCH(req: NextRequest) {
     const employee = await prisma.employee.update({
       where: { userId: targetUserId },
       data: filteredUpdates,
-      include: { user: { select: { employeeId: true, email: true, role: true } } },
+      include: { user: { select: { employeeId: true, email: true } } },
     });
 
     return NextResponse.json({ success: true, data: employee });

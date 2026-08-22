@@ -51,19 +51,32 @@ export function getTokenFromRequest(req: NextRequest): string | null {
   return null;
 }
 
+export type AuthenticatedUser = NonNullable<Awaited<ReturnType<typeof getUserFromRequest>>>;
+
 export async function getUserFromRequest(req: NextRequest) {
   const token = getTokenFromRequest(req);
   if (!token) return null;
-  
+
   const payload = verifyToken(token);
   if (!payload) return null;
-  
+
   const user = await prisma.user.findUnique({
-    where: { id: payload.userId },
+    where: { userId: BigInt(payload.userId) },
     include: { employee: true },
   });
-  
-  return user;
+
+  if (!user) return null;
+
+  const userRoles = await prisma.userRole.findMany({
+    where: { userId: user.userId },
+    include: { role: true },
+  });
+  const role: "EMPLOYEE" | "ADMIN" =
+    userRoles.some((ur) => ur.role.roleName?.toUpperCase() === "ADMIN")
+      ? "ADMIN"
+      : "EMPLOYEE";
+
+  return { ...user, role };
 }
 
 export function validateEmail(email: string): boolean {

@@ -20,31 +20,31 @@ export async function GET(request: NextRequest) {
     endOfMonth.setHours(23, 59, 59, 999);
 
     if (user.role === "EMPLOYEE") {
-      const employee = await prisma.employee.findUnique({ where: { userId: user.id } });
+      const employee = user.employee;
       if (!employee) {
         return NextResponse.json({ success: false, error: "Employee profile not found" }, { status: 404 });
       }
 
       const [todayAttendance, monthAttendance, leaveCounts, latestPayroll] = await Promise.all([
         prisma.attendance.findFirst({
-          where: { employeeId: employee.id, date: { gte: startOfToday, lte: endOfToday } },
+          where: { employeeId: employee.employeeId, attendanceDate: { gte: startOfToday, lte: endOfToday } },
         }),
         prisma.attendance.groupBy({
           by: ["status"],
           where: {
-            employeeId: employee.id,
-            date: { gte: startOfMonth, lte: endOfMonth },
+            employeeId: employee.employeeId,
+            attendanceDate: { gte: startOfMonth, lte: endOfMonth },
           },
           _count: { status: true },
         }),
         prisma.leaveRequest.groupBy({
           by: ["status"],
-          where: { employeeId: employee.id },
+          where: { employeeId: employee.employeeId },
           _count: { status: true },
         }),
-        prisma.payroll.findFirst({
-          where: { employeeId: employee.id },
-          orderBy: [{ year: "desc" }, { month: "desc" }],
+        prisma.payroll_records.findFirst({
+          where: { employee_id: employee.employeeId },
+          orderBy: { payroll_month: "desc" },
         }),
       ]);
 
@@ -101,7 +101,7 @@ export async function GET(request: NextRequest) {
       await Promise.all([
         prisma.employee.count(),
         prisma.attendance.count({
-          where: { date: { gte: startOfToday, lte: endOfToday }, status: "PRESENT" },
+          where: { attendanceDate: { gte: startOfToday, lte: endOfToday }, status: "PRESENT" },
         }),
         prisma.leaveRequest.count({
           where: { status: "APPROVED", startDate: { lte: endOfToday }, endDate: { gte: startOfToday } },
@@ -109,29 +109,23 @@ export async function GET(request: NextRequest) {
         prisma.leaveRequest.count({ where: { status: "PENDING" } }),
         prisma.leaveRequest.findMany({
           include: {
-            employee: {
-              select: { id: true, firstName: true, lastName: true, department: true, designation: true },
-            },
+            employee: true,
           },
-          orderBy: { createdAt: "desc" },
+          orderBy: { appliedAt: "desc" },
           take: 5,
         }),
         prisma.attendance.findMany({
           include: {
-            employee: {
-              select: { id: true, firstName: true, lastName: true, department: true, designation: true },
-            },
+            employee: true,
           },
-          orderBy: { date: "desc" },
+          orderBy: { attendanceDate: "desc" },
           take: 10,
         }),
-        prisma.payroll.findFirst({
+        prisma.payroll_records.findFirst({
           include: {
-            employee: {
-              select: { id: true, firstName: true, lastName: true, department: true, designation: true },
-            },
+            employees: true,
           },
-          orderBy: [{ year: "desc" }, { month: "desc" }],
+          orderBy: { payroll_month: "desc" },
         }),
       ]);
 

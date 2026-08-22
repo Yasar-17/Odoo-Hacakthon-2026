@@ -7,7 +7,7 @@ import StatCard from "@/components/ui/StatCard";
 import Avatar from "@/components/ui/Avatar";
 import StatusBadge from "@/components/ui/StatusBadge";
 import Button from "@/components/ui/Button";
-import Input from "@/components/ui/Input";
+import EmptyState from "@/components/ui/EmptyState";
 import { useToast } from "@/components/ui/Toast";
 
 interface EmployeeRow {
@@ -135,7 +135,7 @@ export default function AdminDashboardPage() {
       <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((n) => (
-            <div key={n} className="bg-white rounded-xl border border-surface-200 shadow-sm p-5 animate-pulse">
+            <div key={n} className="bg-white rounded-xl border border-surface-200 p-5 animate-pulse">
               <div className="w-10 h-10 rounded-lg bg-surface-200 mb-4" />
               <div className="h-7 bg-surface-200 rounded w-16 mb-2" />
               <div className="h-3 bg-surface-100 rounded w-24" />
@@ -143,8 +143,8 @@ export default function AdminDashboardPage() {
           ))}
         </div>
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          <div className="xl:col-span-2 bg-white rounded-xl border border-surface-200 shadow-sm p-5 animate-pulse h-96" />
-          <div className="bg-white rounded-xl border border-surface-200 shadow-sm p-5 animate-pulse h-96" />
+          <div className="xl:col-span-2 bg-white rounded-xl border border-surface-200 p-5 animate-pulse h-96" />
+          <div className="bg-white rounded-xl border border-surface-200 p-5 animate-pulse h-96" />
         </div>
       </div>
     );
@@ -157,7 +157,6 @@ export default function AdminDashboardPage() {
         <StatCard
           value={employees.length}
           label="Total Employees"
-          iconBg="bg-primary-50 text-primary-700"
           icon={
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4.354a4 4 0 110 7.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
@@ -167,7 +166,6 @@ export default function AdminDashboardPage() {
         <StatCard
           value={presentToday}
           label={`${presentPercent}% of team`}
-          iconBg="bg-success-light text-success-text"
           icon={
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -179,7 +177,6 @@ export default function AdminDashboardPage() {
             <StatCard
               value={pendingLeaves.length}
               label="Pending Leave Requests →"
-              iconBg="bg-warning-light text-warning-text"
               icon={
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -191,7 +188,6 @@ export default function AdminDashboardPage() {
         <StatCard
           value={onLeaveToday}
           label="On Leave Today"
-          iconBg="bg-info-light text-info-text"
           icon={
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 15.546c-.523 0-1.046.151-1.5.454a2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.701 2.701 0 00-1.5-.454M9 6v2m3-2v2m3-2v2M9 3h6.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2H9a2 2 0 01-2-2V5a2 2 0 012-2z" />
@@ -203,7 +199,7 @@ export default function AdminDashboardPage() {
       {/* Main two-column section */}
       <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
         {/* Employee table (~65%) */}
-        <div className="xl:col-span-3 bg-white rounded-xl border border-surface-200 shadow-sm overflow-hidden">
+        <div className="xl:col-span-3 bg-white rounded-xl border border-surface-200 overflow-hidden">
           <div className="px-5 py-4 border-b border-surface-200 flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
               <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -214,13 +210,13 @@ export default function AdminDashboardPage() {
                 placeholder="Search by name…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-surface-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-primary-600"
+                className="w-full pl-10 pr-4 py-2 border border-surface-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-surface-900 focus:border-surface-900"
               />
             </div>
             <select
               value={deptFilter}
               onChange={(e) => setDeptFilter(e.target.value)}
-              className="px-3 py-2 border border-surface-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-600"
+              className="px-3 py-2 border border-surface-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-surface-900"
             >
               <option value="ALL">All Departments</option>
               {departments.map((d) => (
@@ -243,7 +239,7 @@ export default function AdminDashboardPage() {
               <tbody>
                 {paged.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="py-12 text-center text-surface-400">No employees found</td>
+                    <td colSpan={5} className="py-12 text-center text-sm text-surface-500">No employees found</td>
                   </tr>
                 ) : (
                   paged.map((emp) => {
@@ -318,7 +314,7 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Pending approvals panel (~35%) */}
-        <div className="xl:col-span-2 bg-white rounded-xl border border-surface-200 shadow-sm self-start">
+        <div className="xl:col-span-2 bg-white rounded-xl border border-surface-200 self-start">
           <div className="flex items-center justify-between px-5 py-4 border-b border-surface-200">
             <h2 className="text-base font-semibold text-surface-900">Pending Approvals</h2>
             {pendingLeaves.length > 0 && (
@@ -329,14 +325,15 @@ export default function AdminDashboardPage() {
           </div>
 
           {pendingLeaves.length === 0 ? (
-            <div className="py-16 flex flex-col items-center justify-center text-center px-6">
-              <div className="w-12 h-12 rounded-full bg-success-light text-success flex items-center justify-center mb-3">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            <EmptyState
+              icon={
+                <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
-              </div>
-              <p className="text-sm text-surface-400">No pending approvals</p>
-            </div>
+              }
+              title="All caught up"
+              description="No leave requests waiting for your approval."
+            />
           ) : (
             <ul className="divide-y divide-surface-100">
               {pendingLeaves.map((leave) => {
@@ -389,7 +386,7 @@ export default function AdminDashboardPage() {
                           placeholder="Add a comment (optional)"
                           value={comment}
                           onChange={(e) => setComment(e.target.value)}
-                          className="w-full px-3 py-2 border border-surface-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-600"
+                          className="w-full px-3 py-2 border border-surface-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-surface-900 focus:border-surface-900"
                         />
                         <div className="flex gap-2 justify-end">
                           <Button size="sm" variant="ghost" onClick={() => setConfirming(null)}>
@@ -401,7 +398,7 @@ export default function AdminDashboardPage() {
                             onClick={handleConfirm}
                             className={
                               confirming.action === "APPROVED"
-                                ? "!bg-success hover:!bg-green-700"
+                                ? "!bg-success hover:!brightness-95"
                                 : ""
                             }
                           >

@@ -33,20 +33,28 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const userRoles = await prisma.userRole.findMany({
+      where: { userId: user.userId },
+      include: { role: true },
+    });
+    const role = userRoles.some((ur) => ur.role.roleName?.toUpperCase() === "ADMIN")
+      ? "ADMIN"
+      : "EMPLOYEE";
+
     const token = signToken({
-      userId: user.id,
+      userId: user.userId.toString(),
       employeeId: user.employeeId,
       email: user.email,
-      role: (user.role as "EMPLOYEE" | "ADMIN") || "EMPLOYEE",
+      role,
     });
 
     const response = NextResponse.json({
       success: true,
       data: {
-        id: user.id,
+        userId: user.userId.toString(),
         employeeId: user.employeeId,
         email: user.email,
-        role: user.role,
+        role,
         employee: user.employee,
       },
     });

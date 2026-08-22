@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import StatusBadge from "@/components/ui/StatusBadge";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
+import EmptyState from "@/components/ui/EmptyState";
 import { useToast } from "@/components/ui/Toast";
 
 interface LeaveRecord {
@@ -22,9 +23,9 @@ type Filter = "ALL" | LeaveRecord["status"];
 const BALANCES: Record<LeaveType, number> = { PAID: 12, SICK: 8, UNPAID: 15 };
 
 const typeMeta: Record<LeaveType, { label: string; accent: string; iconBg: string }> = {
-  PAID:   { label: "Paid",   accent: "bg-success", iconBg: "bg-success-light text-success-text" },
-  SICK:   { label: "Sick",   accent: "bg-warning", iconBg: "bg-warning-light text-warning-text" },
-  UNPAID: { label: "Unpaid", accent: "bg-info",    iconBg: "bg-info-light text-info-text" },
+  PAID:   { label: "Paid",   accent: "bg-surface-900", iconBg: "bg-surface-100 text-surface-800" },
+  SICK:   { label: "Sick",   accent: "bg-surface-900", iconBg: "bg-surface-100 text-surface-800" },
+  UNPAID: { label: "Unpaid", accent: "bg-surface-900", iconBg: "bg-surface-100 text-surface-800" },
 };
 
 function daysBetween(start: string, end: string) {
@@ -130,12 +131,12 @@ export default function LeavePage() {
       {/* Balances + apply button */}
       <div>
         <div className="flex items-center justify-end mb-4">
-          <Button onClick={() => setShowApply(true)}>Apply for Leave</Button>
+          <Button arrow onClick={() => setShowApply(true)}>Apply for Leave</Button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {(Object.keys(typeMeta) as LeaveType[]).map((type) => (
-            <div key={type} className="bg-white rounded-xl border border-surface-200 shadow-sm overflow-hidden">
+            <div key={type} className="bg-white rounded-xl border border-surface-200 overflow-hidden">
               <div className={`h-1 ${typeMeta[type].accent}`} />
               <div className="p-5 flex items-start justify-between">
                 <div>
@@ -157,7 +158,7 @@ export default function LeavePage() {
       </div>
 
       {/* History table */}
-      <div className="bg-white rounded-xl border border-surface-200 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-xl border border-surface-200 overflow-hidden">
         {/* Filter row */}
         <div className="px-5 py-3 border-b border-surface-200 flex items-center justify-between gap-3">
           <div className="inline-flex bg-surface-200 rounded-lg p-1">
@@ -181,16 +182,15 @@ export default function LeavePage() {
         {loading ? (
           <div className="py-16 text-center text-sm text-surface-400">Loading…</div>
         ) : filtered.length === 0 ? (
-          <div className="py-16 flex flex-col items-center justify-center text-center px-6">
-            <div className="w-12 h-12 rounded-full bg-surface-100 flex items-center justify-center text-surface-300 mb-3">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <EmptyState
+            icon={
+              <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-            </div>
-            <p className="text-sm text-surface-400">
-              No {filter === "ALL" ? "" : filter.toLowerCase() + " "}leave requests
-            </p>
-          </div>
+            }
+            title={`No ${filter === "ALL" ? "" : filter.toLowerCase() + " "}leave requests`}
+            description="Leave requests you submit will be tracked here."
+          />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -229,7 +229,7 @@ export default function LeavePage() {
         footer={
           <>
             <Button variant="ghost" onClick={() => setShowApply(false)}>Cancel</Button>
-            <Button onClick={handleSubmit} loading={submitting} disabled={!canSubmit}>
+            <Button arrow onClick={handleSubmit} loading={submitting} disabled={!canSubmit}>
               Submit Request
             </Button>
           </>
@@ -247,7 +247,7 @@ export default function LeavePage() {
             <select
               value={form.type}
               onChange={(e) => setForm({ ...form, type: e.target.value as LeaveType })}
-              className="w-full px-3 py-2.5 border border-surface-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-primary-600"
+              className="w-full px-3 py-2.5 border border-surface-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-surface-900 focus:border-surface-900"
             >
               <option value="PAID">Paid</option>
               <option value="SICK">Sick</option>
@@ -262,7 +262,7 @@ export default function LeavePage() {
                 type="date"
                 value={form.startDate}
                 onChange={(e) => setForm({ ...form, startDate: e.target.value })}
-                className={`w-full px-3 py-2.5 border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-primary-600 ${
+                className={`w-full px-3 py-2.5 border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-surface-900 focus:border-surface-900 ${
                   form.endDate && form.startDate && daysBetween(form.startDate, form.endDate) <= 0
                     ? "border-danger"
                     : "border-surface-300"
@@ -276,7 +276,7 @@ export default function LeavePage() {
                 value={form.endDate}
                 min={form.startDate || undefined}
                 onChange={(e) => setForm({ ...form, endDate: e.target.value })}
-                className={`w-full px-3 py-2.5 border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-primary-600 ${
+                className={`w-full px-3 py-2.5 border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-surface-900 focus:border-surface-900 ${
                   form.endDate && form.startDate && daysBetween(form.startDate, form.endDate) <= 0
                     ? "border-danger"
                     : "border-surface-300"
@@ -292,7 +292,7 @@ export default function LeavePage() {
               placeholder="Add a reason (optional)"
               value={form.remarks}
               onChange={(e) => setForm({ ...form, remarks: e.target.value })}
-              className="w-full px-3 py-2.5 border border-surface-300 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-primary-600"
+              className="w-full px-3 py-2.5 border border-surface-300 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-surface-900 focus:border-surface-900"
             />
           </div>
         </div>

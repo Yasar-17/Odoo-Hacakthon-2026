@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
+import EmptyState from "@/components/ui/EmptyState";
 
 export default function AdminAttendancePage() {
   const [records, setRecords] = useState<Record<string, unknown>[]>([]);
@@ -26,16 +27,16 @@ export default function AdminAttendancePage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-surface-900">Attendance Records</h1>
+        <h1 className="text-xl font-bold text-surface-900 tracking-tight">Attendance Records</h1>
         <input
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
-          className="px-3 py-2 border border-surface-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className="px-3 py-2 border border-surface-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-surface-900 focus:border-surface-900"
         />
       </div>
 
-      <Card>
+      <Card padding={false}>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -50,8 +51,16 @@ export default function AdminAttendancePage() {
             <tbody>
               {records.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="py-8 text-center text-surface-400">
-                    No attendance records for this date.
+                  <td colSpan={5} className="py-2">
+                    <EmptyState
+                      icon={
+                        <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      }
+                      title="No attendance records"
+                      description="Nobody has checked in for this date yet."
+                    />
                   </td>
                 </tr>
               ) : (

@@ -37,7 +37,7 @@ export default function TopBar({ onHamburgerClick }: TopBarProps) {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
           </svg>
         </button>
-        <h1 className="text-lg font-semibold text-surface-900">{title}</h1>
+        <h1 className="text-lg font-bold text-surface-900 tracking-tight">{title}</h1>
       </div>
 
       <div className="flex items-center gap-2">

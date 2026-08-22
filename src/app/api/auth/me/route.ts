@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       success: true,
       data: {
-        id: user.id,
+        userId: user.userId.toString(),
         employeeId: user.employeeId,
         email: user.email,
         role: user.role,
