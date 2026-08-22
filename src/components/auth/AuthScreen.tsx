@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Icon from "@/components/ui/Icon";
 
 type Mode = "signin" | "signup";
 
@@ -22,11 +23,7 @@ export default function AuthScreen({ initialMode }: { initialMode: Mode }) {
   const [signInLoading, setSignInLoading] = useState(false);
 
   const [signUpForm, setSignUpForm] = useState({
-    employeeId: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    role: "EMPLOYEE",
+    employeeId: "", email: "", password: "", confirmPassword: "",
   });
   const [signUpErrors, setSignUpErrors] = useState<Record<string, string>>({});
   const [signUpApiError, setSignUpApiError] = useState("");
@@ -56,10 +53,7 @@ export default function AuthScreen({ initialMode }: { initialMode: Mode }) {
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setSignInError("");
-    if (!signInEmail || !signInPassword) {
-      setSignInError("Please fill in all fields");
-      return;
-    }
+    if (!signInEmail || !signInPassword) { setSignInError("Please fill in all fields"); return; }
     setSignInLoading(true);
     try {
       const res = await fetch("/api/auth/signin", {
@@ -68,16 +62,10 @@ export default function AuthScreen({ initialMode }: { initialMode: Mode }) {
         body: JSON.stringify({ email: signInEmail, password: signInPassword }),
       });
       const data = await res.json();
-      if (!data.success) {
-        setSignInError(data.error || "Invalid credentials");
-        return;
-      }
+      if (!data.success) { setSignInError(data.error || "Invalid credentials"); return; }
       router.push(data.data.role === "ADMIN" ? "/admin" : "/dashboard");
-    } catch {
-      setSignInError("Something went wrong. Please try again.");
-    } finally {
-      setSignInLoading(false);
-    }
+    } catch { setSignInError("Something went wrong. Please try again."); }
+    finally { setSignInLoading(false); }
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -89,305 +77,154 @@ export default function AuthScreen({ initialMode }: { initialMode: Mode }) {
       const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          employeeId: signUpForm.employeeId,
-          email: signUpForm.email,
-          password: signUpForm.password,
-          role: signUpForm.role,
-        }),
+        body: JSON.stringify({ employeeId: signUpForm.employeeId, email: signUpForm.email, password: signUpForm.password }),
       });
       const data = await res.json();
-      if (!data.success) {
-        setSignUpApiError(data.error || "Signup failed");
-        return;
-      }
-      setMode("signin");
-      setSignInEmail(signUpForm.email);
-    } catch {
-      setSignUpApiError("Something went wrong. Please try again.");
-    } finally {
-      setSignUpLoading(false);
-    }
+      if (!data.success) { setSignUpApiError(data.error || "Signup failed"); return; }
+      setMode("signin"); setSignInEmail(signUpForm.email);
+    } catch { setSignUpApiError("Something went wrong. Please try again."); }
+    finally { setSignUpLoading(false); }
   };
 
   return (
     <div className="flex min-h-screen">
-      {/* Left Panel */}
-      <div className="relative w-[45%] bg-[#0a0a0a] flex flex-col justify-between p-10 overflow-hidden">
-        {/* Geometric pattern overlay */}
-        <div className="absolute inset-0 opacity-[0.04]">
-          <svg width="100%" height="100%">
-            <defs>
-              <pattern id="geo" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
-                <path d="M0 20 L20 0 L40 20 L20 40Z" fill="none" stroke="white" strokeWidth="0.5" />
-              </pattern>
-            </defs>
-            <rect width="100%" height="100%" fill="url(#geo)" />
-          </svg>
-        </div>
-
-        {/* Logo */}
-        <div className="relative z-10 flex items-center gap-2">
-          <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-            <span className="text-primary font-bold text-sm">D</span>
+      <div className="relative hidden lg:flex w-[45%] bg-[#0a0a0a] flex-col justify-between p-12 overflow-hidden">
+        <div className="absolute inset-0 opacity-[0.03]" style={{
+          backgroundImage: "radial-gradient(circle at 1px 1px, white 1px, transparent 0)",
+          backgroundSize: "32px 32px",
+        }} />
+        <div className="relative z-10 flex items-center gap-2.5 animate-fade-in">
+          <div className="w-9 h-9 bg-white rounded-xl flex items-center justify-center shadow-lg">
+            <span className="text-black font-bold text-base font-headline">D</span>
           </div>
-          <span className="text-xl font-bold text-white">Dayflow</span>
+          <span className="text-xl font-bold text-white font-headline">Dayflow</span>
         </div>
-
-        {/* Quote */}
-        <div className="relative z-10 my-auto">
-          <svg className="w-10 h-10 text-secondary mb-6" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10H14.017zM0 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151C7.546 6.068 5.983 8.789 5.983 11H10v10H0z" />
-          </svg>
-          <p className="text-[32px] leading-snug font-semibold text-white mb-6">
-            Dayflow tracks every check-in, flags every leave conflict, and keeps payroll{" "}
-            <span className="text-secondary">accurate without the back-and-forth.</span>
+        <div className="relative z-10 my-auto animate-fade-in-up">
+          <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center mb-6">
+            <Icon name="format_quote" filled className="text-[24px] text-white/60" />
+          </div>
+          <p className="text-[34px] leading-[1.3] font-semibold text-white mb-6 font-headline tracking-tight">
+            Track every check-in, flag every conflict, and keep payroll{" "}
+            <span className="text-white/50">accurate without the back-and-forth.</span>
           </p>
-          <p className="font-mono text-xs uppercase tracking-wider text-secondary">
-            HR Officer &bull; Enterprise Team
-          </p>
+          <p className="font-mono text-xs uppercase tracking-[0.15em] text-white/40">HR Officer &bull; Enterprise Team</p>
         </div>
-
-        {/* Stats */}
-        <div className="relative z-10">
-          <p className="font-mono text-xs text-secondary">
-            500+ employees managed &bull; 50+ companies &bull; 99% attendance accuracy
-          </p>
+        <div className="relative z-10 flex gap-8 animate-fade-in">
+          {[{value:"500+",label:"Employees"},{value:"50+",label:"Companies"},{value:"99%",label:"Accuracy"}].map((s) => (
+            <div key={s.label}>
+              <p className="text-2xl font-bold text-white font-headline">{s.value}</p>
+              <p className="text-xs uppercase tracking-wider text-white/40 mt-0.5">{s.label}</p>
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* Right Panel */}
-      <div className="w-[55%] bg-[#f8f8f8] flex items-center justify-center p-10">
-        <div className="w-full max-w-[420px]">
-          {/* Tab Toggle */}
-          <div className="flex bg-surface-container-low rounded-lg p-1 mb-10">
-            <button
-              onClick={() => setMode("signin")}
-              className={`flex-1 py-2.5 text-sm font-medium rounded-md transition-all ${
-                mode === "signin"
-                  ? "bg-white text-primary shadow-sm"
-                  : "text-secondary hover:text-primary"
-              }`}
-            >
-              Sign In
-            </button>
-            <button
-              onClick={() => setMode("signup")}
-              className={`flex-1 py-2.5 text-sm font-medium rounded-md transition-all ${
-                mode === "signup"
-                  ? "bg-white text-primary shadow-sm"
-                  : "text-secondary hover:text-primary"
-              }`}
-            >
-              Sign Up
-            </button>
+      <div className="flex-1 bg-[#f8f8f8] flex items-center justify-center p-6 sm:p-10">
+        <div className="w-full max-w-[420px] animate-fade-in-up">
+          <div className="lg:hidden flex items-center gap-2.5 mb-8">
+            <div className="w-9 h-9 bg-black rounded-xl flex items-center justify-center">
+              <span className="text-white font-bold text-base font-headline">D</span>
+            </div>
+            <span className="text-xl font-bold text-black font-headline">Dayflow</span>
           </div>
 
-          {/* Sign In Form */}
+          <div className="flex bg-surface-container-low rounded-xl p-1 mb-8">
+            <button onClick={() => setMode("signin")} className={`flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all ${mode==="signin"?"bg-white text-primary shadow-sm":"text-secondary hover:text-primary"}`}>Sign In</button>
+            <button onClick={() => setMode("signup")} className={`flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all ${mode==="signup"?"bg-white text-primary shadow-sm":"text-secondary hover:text-primary"}`}>Sign Up</button>
+          </div>
+
           {mode === "signin" && (
             <div>
-              <h1 className="text-2xl font-bold text-primary mb-1">Welcome back</h1>
+              <h1 className="text-[28px] font-bold text-primary font-headline tracking-tight mb-1">Welcome back</h1>
               <p className="text-secondary text-sm mb-8">Sign in to your account</p>
-
               <form onSubmit={handleSignIn} className="space-y-5">
                 {signInError && (
-                  <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">
-                    {signInError}
+                  <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3 animate-scale-in">
+                    <Icon name="error" filled className="text-[18px] shrink-0" />{signInError}
                   </div>
                 )}
-
                 <div>
                   <label className="block text-sm font-medium text-secondary mb-1.5">Email</label>
                   <div className="relative">
-                    <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-on-tertiary-container" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                    </svg>
-                    <input
-                      type="email"
-                      placeholder="you@company.com"
-                      value={signInEmail}
-                      onChange={(e) => { setSignInEmail(e.target.value); setSignInError(""); }}
-                      className={`w-full pl-10 pr-4 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white ${
-                        signInError ? "border-red-300" : "border-border-light"
-                      }`}
-                    />
+                    <Icon name="mail" className="absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-outline pointer-events-none" />
+                    <input type="email" placeholder="you@company.com" value={signInEmail} onChange={(e)=>{setSignInEmail(e.target.value);setSignInError("");}} className={`w-full pl-10 pr-4 py-3 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all bg-white ${signInError?"border-red-300":"border-border-light"}`} />
                   </div>
                 </div>
-
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
                     <label className="text-sm font-medium text-secondary">Password</label>
-                    <button type="button" className="text-xs text-secondary hover:text-primary">Forgot?</button>
+                    <button type="button" className="text-xs text-secondary hover:text-primary transition-colors">Forgot?</button>
                   </div>
                   <div className="relative">
-                    <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-on-tertiary-container" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
-                    <input
-                      type="password"
-                      placeholder="Enter your password"
-                      value={signInPassword}
-                      onChange={(e) => { setSignInPassword(e.target.value); setSignInError(""); }}
-                      className={`w-full pl-10 pr-4 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white ${
-                        signInError ? "border-red-300" : "border-border-light"
-                      }`}
-                    />
+                    <Icon name="lock" className="absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-outline pointer-events-none" />
+                    <input type="password" placeholder="Enter your password" value={signInPassword} onChange={(e)=>{setSignInPassword(e.target.value);setSignInError("");}} className={`w-full pl-10 pr-4 py-3 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all bg-white ${signInError?"border-red-300":"border-border-light"}`} />
                   </div>
                 </div>
-
-                <button
-                  type="submit"
-                  disabled={signInLoading}
-                  className="w-full flex items-center justify-center gap-2 py-3 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary-container disabled:opacity-50 transition-colors"
-                >
-                  {signInLoading ? "Signing in..." : "Sign In"}
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                  </svg>
+                <button type="submit" disabled={signInLoading} className="w-full flex items-center justify-center gap-2 py-3 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary-container disabled:opacity-50 transition-all active:scale-[0.98] shadow-sm hover:shadow-md">
+                  {signInLoading?"Signing in...":"Sign In"}{!signInLoading&&<Icon name="arrow_forward" className="text-[18px]" />}
                 </button>
               </form>
-
-              <p className="text-center text-sm text-secondary mt-8">
-                Don&apos;t have an account?{" "}
-                <button onClick={() => setMode("signup")} className="text-primary font-semibold hover:underline">
-                  Sign up
-                </button>
-              </p>
+              <p className="text-center text-sm text-secondary mt-8">Don&apos;t have an account? <button onClick={()=>setMode("signup")} className="text-primary font-semibold hover:underline">Sign up</button></p>
             </div>
           )}
 
-          {/* Sign Up Form */}
           {mode === "signup" && (
             <div>
-              <h1 className="text-2xl font-bold text-primary mb-1">Create your account</h1>
+              <h1 className="text-[28px] font-bold text-primary font-headline tracking-tight mb-1">Create your account</h1>
               <p className="text-secondary text-sm mb-8">Get started with Dayflow</p>
-
               <form onSubmit={handleSignUp} className="space-y-5">
                 {signUpApiError && (
-                  <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">
-                    {signUpApiError}
+                  <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3 animate-scale-in">
+                    <Icon name="error" filled className="text-[18px] shrink-0" />{signUpApiError}
                   </div>
                 )}
-
                 <div>
                   <label className="block text-sm font-medium text-secondary mb-1.5">Employee ID</label>
-                  <input
-                    type="text"
-                    placeholder="EMP001"
-                    value={signUpForm.employeeId}
-                    onChange={(e) => updateSignUp("employeeId", e.target.value)}
-                    className={`w-full px-4 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white ${
-                      signUpErrors.employeeId ? "border-red-300" : "border-border-light"
-                    }`}
-                  />
+                  <div className="relative">
+                    <Icon name="badge" className="absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-outline pointer-events-none" />
+                    <input type="text" placeholder="EMP001" value={signUpForm.employeeId} onChange={(e)=>updateSignUp("employeeId",e.target.value)} className={`w-full pl-10 pr-4 py-3 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all bg-white ${signUpErrors.employeeId?"border-red-300":"border-border-light"}`} />
+                  </div>
                   {signUpErrors.employeeId && <p className="text-xs text-red-600 mt-1">{signUpErrors.employeeId}</p>}
                 </div>
-
                 <div>
                   <label className="block text-sm font-medium text-secondary mb-1.5">Email</label>
                   <div className="relative">
-                    <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-on-tertiary-container" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                    </svg>
-                    <input
-                      type="email"
-                      placeholder="you@company.com"
-                      value={signUpForm.email}
-                      onChange={(e) => updateSignUp("email", e.target.value)}
-                      className={`w-full pl-10 pr-4 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white ${
-                        signUpErrors.email ? "border-red-300" : "border-border-light"
-                      }`}
-                    />
+                    <Icon name="mail" className="absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-outline pointer-events-none" />
+                    <input type="email" placeholder="you@company.com" value={signUpForm.email} onChange={(e)=>updateSignUp("email",e.target.value)} className={`w-full pl-10 pr-4 py-3 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all bg-white ${signUpErrors.email?"border-red-300":"border-border-light"}`} />
                   </div>
-                  <p className="text-xs text-on-tertiary-container mt-1">Verification email will be sent</p>
                   {signUpErrors.email && <p className="text-xs text-red-600 mt-1">{signUpErrors.email}</p>}
                 </div>
-
                 <div>
                   <label className="block text-sm font-medium text-secondary mb-1.5">Password</label>
                   <div className="relative">
-                    <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-on-tertiary-container" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
-                    <input
-                      type="password"
-                      placeholder="Create a password"
-                      value={signUpForm.password}
-                      onChange={(e) => updateSignUp("password", e.target.value)}
-                      className={`w-full pl-10 pr-4 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white ${
-                        signUpErrors.password ? "border-red-300" : "border-border-light"
-                      }`}
-                    />
+                    <Icon name="lock" className="absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-outline pointer-events-none" />
+                    <input type="password" placeholder="Create a password" value={signUpForm.password} onChange={(e)=>updateSignUp("password",e.target.value)} className={`w-full pl-10 pr-4 py-3 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all bg-white ${signUpErrors.password?"border-red-300":"border-border-light"}`} />
                   </div>
                   {signUpErrors.password && <p className="text-xs text-red-600 mt-1">{signUpErrors.password}</p>}
                   {signUpForm.password && (
-                    <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1">
+                    <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5">
                       {passwordRules.map((rule) => (
-                        <p key={rule.label} className={`text-xs ${rule.test(signUpForm.password) ? "text-success-text" : "text-on-tertiary-container"}`}>
-                          {rule.test(signUpForm.password) ? "✓" : "○"} {rule.label}
+                        <p key={rule.label} className={`flex items-center gap-1.5 text-xs ${rule.test(signUpForm.password) ? "text-success-text" : "text-on-tertiary-container"}`}>
+                          <Icon name={rule.test(signUpForm.password) ? "check_circle" : "radio_button_unchecked"} filled={rule.test(signUpForm.password)} className="text-[14px]" />
+                          {rule.label}
                         </p>
                       ))}
                     </div>
                   )}
                 </div>
-
                 <div>
                   <label className="block text-sm font-medium text-secondary mb-1.5">Confirm Password</label>
                   <div className="relative">
-                    <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-on-tertiary-container" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
-                    <input
-                      type="password"
-                      placeholder="Confirm your password"
-                      value={signUpForm.confirmPassword}
-                      onChange={(e) => updateSignUp("confirmPassword", e.target.value)}
-                      className={`w-full pl-10 pr-4 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white ${
-                        signUpErrors.confirmPassword ? "border-red-300" : "border-border-light"
-                      }`}
-                    />
+                    <Icon name="lock" className="absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-outline pointer-events-none" />
+                    <input type="password" placeholder="Confirm your password" value={signUpForm.confirmPassword} onChange={(e)=>updateSignUp("confirmPassword",e.target.value)} className={`w-full pl-10 pr-4 py-3 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all bg-white ${signUpErrors.confirmPassword?"border-red-300":"border-border-light"}`} />
                   </div>
                   {signUpErrors.confirmPassword && <p className="text-xs text-red-600 mt-1">{signUpErrors.confirmPassword}</p>}
                 </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-secondary mb-1.5">Role</label>
-                  <div className="flex gap-3">
-                    {["EMPLOYEE", "ADMIN"].map((r) => (
-                      <button
-                        key={r}
-                        type="button"
-                        onClick={() => updateSignUp("role", r)}
-                        className={`flex-1 py-2.5 rounded-lg border text-sm font-medium transition-all ${
-                          signUpForm.role === r
-                            ? "bg-primary text-white border-primary"
-                            : "bg-white text-secondary border-border-light hover:border-outline"
-                        }`}
-                      >
-                        {r === "ADMIN" ? "HR / Admin" : "Employee"}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={signUpLoading}
-                  className="w-full flex items-center justify-center gap-2 py-3 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary-container disabled:opacity-50 transition-colors"
-                >
-                  {signUpLoading ? "Creating account..." : "Sign Up"}
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                  </svg>
+                <button type="submit" disabled={signUpLoading} className="w-full flex items-center justify-center gap-2 py-3 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary-container disabled:opacity-50 transition-all active:scale-[0.98] shadow-sm hover:shadow-md">
+                  {signUpLoading?"Creating account...":"Sign Up"}{!signUpLoading&&<Icon name="arrow_forward" className="text-[18px]" />}
                 </button>
               </form>
-
-              <p className="text-center text-sm text-secondary mt-8">
-                Already have an account?{" "}
-                <button onClick={() => setMode("signin")} className="text-primary font-semibold hover:underline">
-                  Sign in
-                </button>
-              </p>
+              <p className="text-center text-sm text-secondary mt-8">Already have an account? <button onClick={()=>setMode("signin")} className="text-primary font-semibold hover:underline">Sign in</button></p>
             </div>
           )}
         </div>

@@ -33,12 +33,12 @@ export default function Modal({ isOpen, onClose, title, children, footer }: Moda
   return (
     <div
       ref={overlayRef}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-primary/20 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm p-4 animate-fade-in"
       onClick={(e) => {
         if (e.target === overlayRef.current) onClose();
       }}
     >
-      <div className="bg-surface-pure rounded-xl ambient-shadow w-full max-w-[480px] max-h-[90vh] overflow-y-auto scrollbar-thin">
+      <div className="bg-surface-pure rounded-2xl ambient-shadow w-full max-w-[480px] max-h-[90vh] overflow-y-auto scrollbar-thin animate-scale-in">
         <div className="flex items-center justify-between px-6 py-4 border-b border-outline-variant">
           <h2 className="font-headline text-headline-md text-primary">{title}</h2>
           <button

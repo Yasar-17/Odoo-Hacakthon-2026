@@ -14,7 +14,7 @@ export default function ShellLayout({ children, isAdmin = false }: { children: R
         <Sidebar isAdmin={isAdmin} mobileOpen={mobileOpen} onMobileClose={() => setMobileOpen(false)} />
         <TopBar onHamburgerClick={() => setMobileOpen(true)} isAdmin={isAdmin} />
         <main className="lg:ml-sidebar min-w-0">
-          <div className="max-w-[1440px] mx-auto px-margin-mobile md:px-gutter lg:px-container-padding py-stack-md lg:py-section-gap flex flex-col gap-section-gap">
+          <div className="max-w-[1440px] mx-auto px-margin-mobile md:px-gutter lg:px-container-padding py-stack-md lg:py-section-gap flex flex-col gap-gutter animate-fade-in">
             {children}
           </div>
         </main>

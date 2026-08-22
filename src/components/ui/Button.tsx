@@ -16,19 +16,19 @@ const Arrow = () => (
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className = "", variant = "primary", size = "md", loading, arrow, children, disabled, ...props }, ref) => {
     const base =
-      "inline-flex items-center justify-center gap-2 font-label-md uppercase tracking-wider rounded transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed";
+      "inline-flex items-center justify-center gap-2 font-semibold rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]";
 
     const variants: Record<string, string> = {
-      primary: "bg-primary text-on-primary hover:bg-primary-container hover:text-on-primary-container shadow-sm",
-      secondary: "bg-surface-pure border border-outline-variant text-secondary hover:bg-surface-container-low hover:text-primary",
-      danger: "bg-error text-on-error hover:brightness-95 focus:ring-error",
+      primary: "bg-primary text-on-primary hover:bg-primary-container hover:text-on-primary-container shadow-sm hover:shadow-md",
+      secondary: "bg-surface-pure border border-outline-variant text-secondary hover:bg-surface-container-low hover:text-primary hover:border-primary",
+      danger: "bg-error text-on-error hover:brightness-95 focus:ring-error shadow-sm",
       ghost: "text-secondary hover:bg-surface-container-low hover:text-primary",
     };
 
     const sizes: Record<string, string> = {
       sm: "px-3 py-1.5 text-xs",
-      md: "px-4 py-2.5",
-      lg: "px-6 py-3",
+      md: "px-4 py-2.5 text-sm",
+      lg: "px-6 py-3 text-base",
     };
 
     return (

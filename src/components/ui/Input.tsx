@@ -11,8 +11,8 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({ label, error, classNam
       {label && <label className="block text-label-md uppercase tracking-wider text-secondary">{label}</label>}
       <input
         ref={ref}
-        className={`w-full bg-surface-pure border border-border-light px-4 py-3 rounded font-body-md text-body-md text-primary placeholder:text-on-tertiary-container focus:outline-none focus:border-border-bold focus:ring-0 transition-colors ${
-          error ? "border-error" : ""
+        className={`w-full bg-surface-pure border border-border-light px-4 py-3 rounded-lg font-sans text-sm text-primary placeholder:text-on-tertiary-container focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200 ${
+          error ? "border-error focus:border-error focus:ring-error/20" : ""
         } ${className}`}
         {...props}
       />
