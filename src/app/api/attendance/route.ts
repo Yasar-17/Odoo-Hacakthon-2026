@@ -130,3 +130,141 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: false, error: "Failed to process attendance" }, { status: 500 });
   }
 }
+
+const VALID_ATTENDANCE_STATUSES = ["PRESENT", "ABSENT", "HALF_DAY", "LEAVE"] as const;
+
+const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+const TIME_REGEX = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+function parseAttendanceDate(value: unknown): Date | null {
+  if (typeof value !== "string" || !DATE_REGEX.test(value)) return null;
+  const [year, month, day] = value.split("-").map(Number);
+  const parsed = new Date(year, month - 1, day);
+  if (
+    parsed.getFullYear() !== year ||
+    parsed.getMonth() !== month - 1 ||
+    parsed.getDate() !== day
+  ) {
+    return null;
+  }
+  return parsed;
+}
+
+function parseTimeToDate(dateValue: string, timeValue: string): Date | null {
+  if (!TIME_REGEX.test(timeValue)) return null;
+  return new Date(`${dateValue}T${timeValue}:00`);
+}
+
+export async function PUT(request: NextRequest) {
+  try {
+    const user = await getUserFromRequest(request);
+    if (!user) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
+
+    const userRoles = await prisma.userRole.findMany({
+      where: { userId: user.userId },
+      include: { role: true },
+    });
+    const isAdmin = userRoles.some(
+      (userRole) => userRole.role.roleName?.toUpperCase() === "ADMIN"
+    );
+    if (!isAdmin) {
+      return NextResponse.json(
+        { success: false, error: "Only admins can manage attendance records" },
+        { status: 403 }
+      );
+    }
+
+    const body = await request.json();
+    const { employeeId, date, status, checkIn, checkOut } = body;
+
+    if (!employeeId || typeof employeeId !== "string") {
+      return NextResponse.json({ success: false, error: "employeeId is required" }, { status: 400 });
+    }
+
+    const attendanceDate = parseAttendanceDate(date);
+    if (!attendanceDate) {
+      return NextResponse.json(
+        { success: false, error: "date must be a valid date in YYYY-MM-DD format" },
+        { status: 400 }
+      );
+    }
+
+    if (!status || !VALID_ATTENDANCE_STATUSES.includes(status)) {
+      return NextResponse.json(
+        { success: false, error: "status must be one of: PRESENT, ABSENT, HALF_DAY, LEAVE" },
+        { status: 400 }
+      );
+    }
+
+    let checkInAt: Date | null = null;
+    let checkOutAt: Date | null = null;
+
+    if (status === "PRESENT" || status === "HALF_DAY") {
+      if (checkIn != null) {
+        checkInAt = parseTimeToDate(date, checkIn);
+        if (!checkInAt) {
+          return NextResponse.json(
+            { success: false, error: "checkIn must be a valid time in HH:MM format" },
+            { status: 400 }
+          );
+        }
+      }
+      if (checkOut != null) {
+        checkOutAt = parseTimeToDate(date, checkOut);
+        if (!checkOutAt) {
+          return NextResponse.json(
+            { success: false, error: "checkOut must be a valid time in HH:MM format" },
+            { status: 400 }
+          );
+        }
+      }
+      if (checkInAt && checkOutAt && checkOutAt <= checkInAt) {
+        return NextResponse.json(
+          { success: false, error: "checkOut must be after checkIn" },
+          { status: 400 }
+        );
+      }
+    }
+
+    const targetUser = await prisma.user.findUnique({ where: { employeeId } });
+    if (!targetUser) {
+      return NextResponse.json({ success: false, error: "Employee not found" }, { status: 404 });
+    }
+
+    const employee = await prisma.employee.findUnique({ where: { userId: targetUser.userId } });
+    if (!employee) {
+      return NextResponse.json({ success: false, error: "Employee not found" }, { status: 404 });
+    }
+
+    const data = { status, checkIn: checkInAt, checkOut: checkOutAt };
+
+    const attendance = await prisma.attendance.upsert({
+      where: {
+        employeeId_attendanceDate: {
+          employeeId: employee.employeeId,
+          attendanceDate,
+        },
+      },
+      update: data,
+      create: {
+        employeeId: employee.employeeId,
+        attendanceDate,
+        ...data,
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        ...attendance,
+        attendanceId: attendance.attendanceId.toString(),
+        employeeId: attendance.employeeId.toString(),
+      },
+    });
+  } catch (error) {
+    console.error("Error updating attendance:", error);
+    return NextResponse.json({ success: false, error: "Failed to update attendance" }, { status: 500 });
+  }
+}
