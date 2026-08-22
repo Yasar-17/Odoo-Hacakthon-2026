@@ -1,24 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getUserFromRequest } from "@/lib/auth";
-
-function serializeData<T>(value: T): unknown {
-  return JSON.parse(
-    JSON.stringify(value, (_key, val: unknown) =>
-      typeof val === "bigint" ? val.toString() : val
-    )
-  );
-}
-
-async function isAdminUser(userId: bigint): Promise<boolean> {
-  const userRoles = await prisma.userRole.findMany({
-    where: { userId },
-    include: { role: true },
-  });
-  return userRoles.some(
-    (userRole) => userRole.role.roleName?.toUpperCase() === "ADMIN"
-  );
-}
+import {
+  getUserFromRequest,
+  isAdminUser,
+  serializeData,
+} from "@/lib/auth";
 
 function isPrismaNotFoundError(error: unknown): boolean {
   return (

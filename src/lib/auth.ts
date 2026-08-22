@@ -55,16 +55,70 @@ export function getTokenFromRequest(req: NextRequest): string | null {
 export async function getUserFromRequest(req: NextRequest) {
   const token = getTokenFromRequest(req);
   if (!token) return null;
-  
+
   const payload = verifyToken(token);
   if (!payload) return null;
-  
+
+  const userId = /^\d+$/.test(String(payload.userId)) ? BigInt(payload.userId) : null;
+  if (userId === null) return null;
+
   const user = await prisma.user.findUnique({
-    where: { id: payload.userId },
+    where: { userId },
     include: { employee: true },
   });
-  
+
   return user;
+}
+
+export function serializeData<T>(value: T): unknown {
+  return JSON.parse(
+    JSON.stringify(value, (_key, val: unknown) =>
+      typeof val === "bigint" ? val.toString() : val
+    )
+  );
+}
+
+export function isPrismaNotFoundError(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as { code?: unknown }).code === "P2025"
+  );
+}
+
+export async function getUserRoles(userId: bigint): Promise<string[]> {
+  const userRoles = await prisma.userRole.findMany({
+    where: { userId },
+    include: { role: true },
+  });
+  return userRoles
+    .map((userRole) => userRole.role.roleName?.toUpperCase() ?? "")
+    .filter(Boolean);
+}
+
+export async function isAdminUser(userId: bigint): Promise<boolean> {
+  const roles = await getUserRoles(userId);
+  return roles.includes("ADMIN");
+}
+
+export async function isEmployeeUser(userId: bigint): Promise<boolean> {
+  const roles = await getUserRoles(userId);
+  return roles.includes("EMPLOYEE") && !roles.includes("ADMIN");
+}
+
+export async function assignUserRole(userId: bigint, roleName: string): Promise<void> {
+  const normalized = roleName.toUpperCase();
+  const role = await prisma.role.upsert({
+    where: { roleName: normalized },
+    update: {},
+    create: { roleName: normalized },
+  });
+  await prisma.userRole.upsert({
+    where: { userId_roleId: { userId, roleId: role.roleId } },
+    update: {},
+    create: { userId, roleId: role.roleId },
+  });
 }
 
 export function validateEmail(email: string): boolean {

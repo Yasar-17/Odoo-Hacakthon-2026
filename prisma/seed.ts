@@ -3,9 +3,47 @@ import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
+async function ensureRole(roleName: string) {
+  return prisma.role.upsert({
+    where: { roleName },
+    update: {},
+    create: { roleName },
+  });
+}
+
+async function ensureDepartment(departmentName: string) {
+  return prisma.department.upsert({
+    where: { departmentName },
+    update: {},
+    create: { departmentName },
+  });
+}
+
+async function ensurePosition(positionName: string) {
+  const existing = await prisma.jobPosition.findFirst({
+    where: { positionName },
+  });
+  if (existing) return existing;
+  return prisma.jobPosition.create({ data: { positionName } });
+}
+
+async function assignRole(userId: bigint, roleName: string) {
+  const role = await ensureRole(roleName);
+  await prisma.userRole.upsert({
+    where: { userId_roleId: { userId, roleId: role.roleId } },
+    update: {},
+    create: { userId, roleId: role.roleId },
+  });
+}
+
 async function main() {
   const adminPasswordHash = await bcrypt.hash("Admin@123", 10);
   const empPasswordHash = await bcrypt.hash("Employee@123", 10);
+
+  const hrDepartment = await ensureDepartment("Human Resources");
+  const engineeringDepartment = await ensureDepartment("Engineering");
+  const hrManagerPosition = await ensurePosition("HR Manager");
+  const developerPosition = await ensurePosition("Software Developer");
 
   const adminUser = await prisma.user.upsert({
     where: { email: "admin@dayflow.com" },
@@ -14,25 +52,21 @@ async function main() {
       employeeId: "EMP001",
       email: "admin@dayflow.com",
       passwordHash: adminPasswordHash,
-      role: "ADMIN",
       employee: {
         create: {
           firstName: "Rajesh",
           lastName: "Kumar",
-          department: "Human Resources",
-          designation: "HR Manager",
+          department: { connect: { departmentId: hrDepartment.departmentId } },
+          position: { connect: { positionId: hrManagerPosition.positionId } },
           phone: "+91-9876543210",
           address: "12 MG Road, Bangalore, Karnataka 560001",
-          basicSalary: 80000,
-          hra: 24000,
-          allowances: 12000,
-          deductions: 8000,
-          employmentType: "FULL_TIME",
+          employmentStatus: "FULL_TIME",
           gender: "Male",
         },
       },
     },
   });
+  await assignRole(adminUser.userId, "ADMIN");
 
   const empUser = await prisma.user.upsert({
     where: { email: "employee@dayflow.com" },
@@ -41,28 +75,27 @@ async function main() {
       employeeId: "EMP002",
       email: "employee@dayflow.com",
       passwordHash: empPasswordHash,
-      role: "EMPLOYEE",
       employee: {
         create: {
           firstName: "Priya",
           lastName: "Sharma",
-          department: "Engineering",
-          designation: "Software Developer",
+          department: {
+            connect: { departmentId: engineeringDepartment.departmentId },
+          },
+          position: { connect: { positionId: developerPosition.positionId } },
           phone: "+91-9876543211",
           address: "45 Indiranagar, Bangalore, Karnataka 560038",
-          basicSalary: 60000,
-          hra: 18000,
-          allowances: 8000,
-          deductions: 5000,
-          employmentType: "FULL_TIME",
+          joiningDate: new Date(new Date().getFullYear(), 0, 1),
+          employmentStatus: "FULL_TIME",
           gender: "Female",
         },
       },
     },
   });
+  await assignRole(empUser.userId, "EMPLOYEE");
 
   const emp = await prisma.employee.findUnique({
-    where: { userId: empUser.id },
+    where: { userId: empUser.userId },
   });
 
   if (emp) {
@@ -73,6 +106,7 @@ async function main() {
     for (let i = 0; i < 5; i++) {
       const date = new Date(startOfWeek);
       date.setDate(startOfWeek.getDate() + i);
+      date.setHours(0, 0, 0, 0);
       if (date > today) break;
 
       const checkIn = new Date(date);
@@ -81,11 +115,16 @@ async function main() {
       checkOut.setHours(18, Math.floor(Math.random() * 30), 0, 0);
 
       await prisma.attendance.upsert({
-        where: { employeeId_date: { employeeId: emp.id, date } },
+        where: {
+          employeeId_attendanceDate: {
+            employeeId: emp.employeeId,
+            attendanceDate: date,
+          },
+        },
         update: {},
         create: {
-          employeeId: emp.id,
-          date,
+          employeeId: emp.employeeId,
+          attendanceDate: date,
           checkIn,
           checkOut,
           status: "PRESENT",
@@ -93,29 +132,56 @@ async function main() {
       });
     }
 
-    await prisma.payroll.upsert({
-      where: { employeeId_month_year: { employeeId: emp.id, month: today.getMonth() + 1, year: today.getFullYear() } },
+    const salaryStructure = await prisma.salaryStructure.findFirst({
+      where: { employeeId: emp.employeeId },
+    });
+
+    if (!salaryStructure) {
+      await prisma.salaryStructure.create({
+        data: {
+          employeeId: emp.employeeId,
+          basicSalary: 60000,
+          hra: 18000,
+          allowances: 8000,
+          deductions: 5000,
+          effectiveFrom: new Date(today.getFullYear(), today.getMonth(), 1),
+        },
+      });
+    }
+
+    const payrollMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+
+    await prisma.payroll_records.upsert({
+      where: {
+        employee_id_payroll_month: {
+          employee_id: emp.employeeId,
+          payroll_month: payrollMonth,
+        },
+      },
       update: {},
       create: {
-        employeeId: emp.id,
-        basicSalary: 60000,
-        hra: 18000,
-        allowances: 8000,
-        deductions: 5000,
-        netSalary: 81000,
-        month: today.getMonth() + 1,
-        year: today.getFullYear(),
-        status: "PAID",
+        employee_id: emp.employeeId,
+        payroll_month: payrollMonth,
+        gross_salary: 60000,
+        total_deductions: 5000,
+        net_salary: 55000,
+        payment_status: "PAID",
       },
+    });
+
+    const leaveType = await prisma.leaveType.upsert({
+      where: { typeName: "PAID" },
+      update: {},
+      create: { typeName: "PAID", description: "Paid leave" },
     });
 
     await prisma.leaveRequest.create({
       data: {
-        employeeId: emp.id,
-        type: "PAID",
+        employeeId: emp.employeeId,
+        leaveTypeId: leaveType.leaveTypeId,
         startDate: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 5),
         endDate: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 6),
-        remarks: "Family function",
+        reason: "Family function",
         status: "PENDING",
       },
     });
