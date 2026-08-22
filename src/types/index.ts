@@ -1,4 +1,14 @@
-export type { User, Employee, Attendance, LeaveRequest, payroll_records } from "@prisma/client";
+export type {
+  User,
+  Employee,
+  Attendance,
+  LeaveRequest,
+  LeaveType,
+  LeaveApproval,
+  EmployeeDocument,
+  SalaryStructure,
+} from "@prisma/client";
+export type { payroll_records as Payroll } from "@prisma/client";
 
 export interface ApiResponse<T = unknown> {
   success: boolean;

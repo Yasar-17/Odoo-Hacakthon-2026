@@ -1,15 +1,32 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getUserFromRequest } from "@/lib/auth";
+import {
+  getUserFromRequest,
+  isAdminUser,
+  isEmployeeUser,
+  serializeData,
+} from "@/lib/auth";
 
 const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 
-function serializeData<T>(value: T): unknown {
-  return JSON.parse(
-    JSON.stringify(value, (_key, val: unknown) =>
-      typeof val === "bigint" ? val.toString() : val
-    )
-  );
+function serializeLeave<T extends {
+  leaveRequestId: bigint;
+  reason: string | null;
+  appliedAt: Date | null;
+  leaveType?: { typeName: string } | null;
+  approvals?: Array<{ comments: string | null }> | null;
+}>(leave: T) {
+  return {
+    ...leave,
+    id: leave.leaveRequestId.toString(),
+    type: leave.leaveType?.typeName ?? null,
+    remarks: leave.reason,
+    createdAt: leave.appliedAt,
+    adminComments:
+      leave.approvals && leave.approvals.length > 0
+        ? leave.approvals[0].comments
+        : null,
+  };
 }
 
 function parseDateOnly(value: unknown): Date | null {
@@ -40,16 +57,6 @@ function parseLeaveRequestId(value: unknown): bigint | null {
     return BigInt(value.trim());
   }
   return null;
-}
-
-async function isAdminUser(userId: bigint): Promise<boolean> {
-  const userRoles = await prisma.userRole.findMany({
-    where: { userId },
-    include: { role: true },
-  });
-  return userRoles.some(
-    (userRole) => userRole.role.roleName?.toUpperCase() === "ADMIN"
-  );
 }
 
 function isPrismaNotFoundError(error: unknown): boolean {
@@ -108,7 +115,10 @@ export async function GET(request: NextRequest) {
       orderBy: { appliedAt: "desc" },
     });
 
-    return NextResponse.json({ success: true, data: serializeData(leaves) });
+    return NextResponse.json({
+      success: true,
+      data: serializeData(leaves.map((leave) => serializeLeave(leave))),
+    });
   } catch (error) {
     console.error("Error fetching leaves:", error);
     return NextResponse.json({ success: false, error: "Failed to fetch leaves" }, { status: 500 });
@@ -122,8 +132,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
-    const admin = await isAdminUser(user.userId);
-    if (admin) {
+    if (!(await isEmployeeUser(user.userId))) {
       return NextResponse.json(
         { success: false, error: "Only employees can apply for leave" },
         { status: 403 }
@@ -227,7 +236,10 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json({ success: true, data: serializeData(leave) }, { status: 201 });
+    return NextResponse.json(
+      { success: true, data: serializeData(serializeLeave(leave)) },
+      { status: 201 }
+    );
   } catch (error) {
     console.error("Error creating leave request:", error);
     return NextResponse.json(
@@ -323,7 +335,10 @@ async function handleDecision(adminUserId: bigint, body: Record<string, unknown>
     });
   });
 
-  return NextResponse.json({ success: true, data: serializeData(updatedLeave) });
+  return NextResponse.json({
+    success: true,
+    data: serializeData(serializeLeave(updatedLeave)),
+  });
 }
 
 export async function PUT(request: NextRequest) {

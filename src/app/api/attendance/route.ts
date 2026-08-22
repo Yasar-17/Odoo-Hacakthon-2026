@@ -1,131 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getUserFromRequest } from "@/lib/auth";
-
-export async function GET(request: NextRequest) {
-  try {
-    const user = await getUserFromRequest(request);
-    if (!user) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
-
-    const { searchParams } = new URL(request.url);
-    const date = searchParams.get("date");
-    const week = searchParams.get("week");
-    const employeeIdParam = searchParams.get("employeeId");
-
-    let whereClause: Record<string, unknown> = {};
-
-    if (user.role === "ADMIN") {
-      if (employeeIdParam) {
-        const targetUser = await prisma.user.findUnique({ where: { employeeId: employeeIdParam } });
-        if (targetUser) {
-          const targetEmp = await prisma.employee.findUnique({ where: { userId: targetUser.userId } });
-          if (targetEmp) whereClause.employeeId = targetEmp.employeeId;
-        }
-      }
-    } else {
-      const employee = user.employee;
-      if (!employee) {
-        return NextResponse.json({ success: false, error: "Employee profile not found" }, { status: 404 });
-      }
-      whereClause.employeeId = employee.employeeId;
-    }
-
-    if (date) {
-      const startOfDay = new Date(date);
-      startOfDay.setHours(0, 0, 0, 0);
-      const endOfDay = new Date(date);
-      endOfDay.setHours(23, 59, 59, 999);
-      whereClause.attendanceDate = { gte: startOfDay, lte: endOfDay };
-    } else if (week) {
-      const startOfWeek = new Date(week);
-      startOfWeek.setHours(0, 0, 0, 0);
-      const endOfWeek = new Date(startOfWeek);
-      endOfWeek.setDate(startOfWeek.getDate() + 6);
-      endOfWeek.setHours(23, 59, 59, 999);
-      whereClause.attendanceDate = { gte: startOfWeek, lte: endOfWeek };
-    } else {
-      const now = new Date();
-      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-      const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-      endOfMonth.setHours(23, 59, 59, 999);
-      whereClause.attendanceDate = { gte: startOfMonth, lte: endOfMonth };
-    }
-
-    const attendance = await prisma.attendance.findMany({
-      where: whereClause,
-      include: {
-        employee: true,
-      },
-      orderBy: { attendanceDate: "desc" },
-    });
-
-    return NextResponse.json({ success: true, data: attendance });
-  } catch (error) {
-    console.error("Error fetching attendance:", error);
-    return NextResponse.json({ success: false, error: "Failed to fetch attendance" }, { status: 500 });
-  }
-}
-
-export async function POST(request: NextRequest) {
-  try {
-    const user = await getUserFromRequest(request);
-    if (!user) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
-
-    if (user.role !== "EMPLOYEE") {
-      return NextResponse.json({ success: false, error: "Only employees can check in/out" }, { status: 403 });
-    }
-
-    const employee = user.employee;
-    if (!employee) {
-      return NextResponse.json({ success: false, error: "Employee profile not found" }, { status: 404 });
-    }
-
-    const body = await request.json();
-    const { action } = body;
-
-    if (!action || !["checkin", "checkout"].includes(action)) {
-      return NextResponse.json({ success: false, error: "Action must be 'checkin' or 'checkout'" }, { status: 400 });
-    }
-
-    const now = new Date();
-    const startOfDay = new Date(now);
-    startOfDay.setHours(0, 0, 0, 0);
-    const endOfDay = new Date(now);
-    endOfDay.setHours(23, 59, 59, 999);
-
-    const existingRecord = await prisma.attendance.findFirst({
-      where: { employeeId: employee.employeeId, attendanceDate: { gte: startOfDay, lte: endOfDay } },
-    });
-
-    if (action === "checkin") {
-      if (existingRecord) {
-        return NextResponse.json({ success: false, error: "Already checked in today" }, { status: 400 });
-      }
-      const attendance = await prisma.attendance.create({
-        data: { employeeId: employee.employeeId, attendanceDate: now, checkIn: now, status: "PRESENT" },
-      });
-      return NextResponse.json({ success: true, data: attendance });
-    }
-
-    if (action === "checkout") {
-      if (!existingRecord) {
-        return NextResponse.json({ success: false, error: "No check-in record found for today" }, { status: 400 });
-      }
-      const attendance = await prisma.attendance.update({
-        where: { employeeId_attendanceDate: { employeeId: employee.employeeId, attendanceDate: startOfDay } },
-        data: { checkOut: now },
-      });
-      return NextResponse.json({ success: true, data: attendance });
-    }
-  } catch (error) {
-    console.error("Error processing attendance:", error);
-    return NextResponse.json({ success: false, error: "Failed to process attendance" }, { status: 500 });
-  }
-}
+import {
+  getUserFromRequest,
+  isAdminUser,
+  isEmployeeUser,
+  serializeData,
+} from "@/lib/auth";
 
 const VALID_ATTENDANCE_STATUSES = ["PRESENT", "ABSENT", "HALF_DAY", "LEAVE"] as const;
 
@@ -146,9 +26,216 @@ function parseAttendanceDate(value: unknown): Date | null {
   return parsed;
 }
 
-function parseTimeToDate(dateValue: string, timeValue: string): Date | null {
-  if (!TIME_REGEX.test(timeValue)) return null;
+function parseTimeToDate(dateValue: unknown, timeValue: unknown): Date | null {
+  if (typeof dateValue !== "string" || !DATE_REGEX.test(dateValue)) return null;
+  if (typeof timeValue !== "string" || !TIME_REGEX.test(timeValue)) return null;
   return new Date(`${dateValue}T${timeValue}:00`);
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    const user = await getUserFromRequest(request);
+    if (!user) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const date = searchParams.get("date");
+    const week = searchParams.get("week");
+    const employeeIdParam = searchParams.get("employeeId");
+
+    let whereClause: Record<string, unknown> = {};
+
+    const admin = await isAdminUser(user.userId);
+    if (admin) {
+      if (employeeIdParam) {
+        const targetUser = await prisma.user.findUnique({ where: { employeeId: employeeIdParam } });
+        if (targetUser) {
+          const targetEmp = await prisma.employee.findUnique({ where: { userId: targetUser.userId } });
+          if (targetEmp) whereClause.employeeId = targetEmp.employeeId;
+        }
+      }
+    } else {
+      const employee = await prisma.employee.findUnique({ where: { userId: user.userId } });
+      if (!employee) {
+        return NextResponse.json(
+          { success: false, error: "Employee profile not found" },
+          { status: 404 }
+        );
+      }
+      whereClause.employeeId = employee.employeeId;
+    }
+
+    if (date) {
+      const startOfDay = parseAttendanceDate(date);
+      if (!startOfDay) {
+        return NextResponse.json(
+          { success: false, error: "Invalid date filter. Use YYYY-MM-DD." },
+          { status: 400 }
+        );
+      }
+      const endOfDay = new Date(startOfDay);
+      endOfDay.setHours(23, 59, 59, 999);
+      whereClause.attendanceDate = { gte: startOfDay, lte: endOfDay };
+    } else if (week) {
+      const startOfWeek = parseAttendanceDate(week);
+      if (!startOfWeek) {
+        return NextResponse.json(
+          { success: false, error: "Invalid week filter. Use YYYY-MM-DD." },
+          { status: 400 }
+        );
+      }
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 6);
+      endOfWeek.setHours(23, 59, 59, 999);
+      whereClause.attendanceDate = { gte: startOfWeek, lte: endOfWeek };
+    } else {
+      const now = new Date();
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      endOfMonth.setHours(23, 59, 59, 999);
+      whereClause.attendanceDate = { gte: startOfMonth, lte: endOfMonth };
+    }
+
+    const attendance = await prisma.attendance.findMany({
+      where: whereClause,
+      include: {
+        employee: {
+          include: {
+            user: { select: { employeeId: true, email: true } },
+          },
+        },
+      },
+      orderBy: { attendanceDate: "desc" },
+    });
+
+    return NextResponse.json({
+      success: true,
+      data: serializeData(
+        attendance.map((record) => ({
+          ...record,
+          id: record.attendanceId.toString(),
+          date: record.attendanceDate,
+        }))
+      ),
+    });
+  } catch (error) {
+    console.error("Error fetching attendance:", error);
+    return NextResponse.json(
+      { success: false, error: "Failed to fetch attendance" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const user = await getUserFromRequest(request);
+    if (!user) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
+
+    const employeeUser = await isEmployeeUser(user.userId);
+    if (!employeeUser) {
+      return NextResponse.json(
+        { success: false, error: "Only employees can check in/out" },
+        { status: 403 }
+      );
+    }
+
+    const employee = await prisma.employee.findUnique({ where: { userId: user.userId } });
+    if (!employee) {
+      return NextResponse.json(
+        { success: false, error: "Employee profile not found" },
+        { status: 404 }
+      );
+    }
+
+    let body: Record<string, unknown>;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ success: false, error: "Invalid JSON body" }, { status: 400 });
+    }
+
+    const { action } = body;
+
+    if (
+      !action ||
+      typeof action !== "string" ||
+      !["checkin", "checkout"].includes(action)
+    ) {
+      return NextResponse.json(
+        { success: false, error: "Action must be 'checkin' or 'checkout'" },
+        { status: 400 }
+      );
+    }
+
+    const now = new Date();
+    const startOfDay = new Date(now);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(now);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const existingRecord = await prisma.attendance.findFirst({
+      where: {
+        employeeId: employee.employeeId,
+        attendanceDate: { gte: startOfDay, lte: endOfDay },
+      },
+    });
+
+    if (action === "checkin") {
+      if (existingRecord) {
+        return NextResponse.json(
+          { success: false, error: "Already checked in today" },
+          { status: 400 }
+        );
+      }
+      const attendance = await prisma.attendance.create({
+        data: {
+          employeeId: employee.employeeId,
+          attendanceDate: now,
+          checkIn: now,
+          status: "PRESENT",
+        },
+      });
+      return NextResponse.json({
+        success: true,
+        data: serializeData({
+          ...attendance,
+          id: attendance.attendanceId.toString(),
+          date: attendance.attendanceDate,
+        }),
+      });
+    }
+
+    if (!existingRecord) {
+      return NextResponse.json(
+        { success: false, error: "No check-in record found for today" },
+        { status: 400 }
+      );
+    }
+
+    const attendance = await prisma.attendance.update({
+      where: { attendanceId: existingRecord.attendanceId },
+      data: { checkOut: now },
+    });
+
+    return NextResponse.json({
+      success: true,
+      data: serializeData({
+        ...attendance,
+        id: attendance.attendanceId.toString(),
+        date: attendance.attendanceDate,
+      }),
+    });
+  } catch (error) {
+    console.error("Error processing attendance:", error);
+    return NextResponse.json(
+      { success: false, error: "Failed to process attendance" },
+      { status: 500 }
+    );
+  }
 }
 
 export async function PUT(request: NextRequest) {
@@ -158,14 +245,21 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
-    if (user.role !== "ADMIN") {
+    const admin = await isAdminUser(user.userId);
+    if (!admin) {
       return NextResponse.json(
         { success: false, error: "Only admins can manage attendance records" },
         { status: 403 }
       );
     }
 
-    const body = await request.json();
+    let body: Record<string, unknown>;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ success: false, error: "Invalid JSON body" }, { status: 400 });
+    }
+
     const { employeeId, date, status, checkIn, checkOut } = body;
 
     if (!employeeId || typeof employeeId !== "string") {
@@ -180,7 +274,11 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    if (!status || !VALID_ATTENDANCE_STATUSES.includes(status)) {
+    if (
+      !status ||
+      typeof status !== "string" ||
+      !VALID_ATTENDANCE_STATUSES.includes(status as (typeof VALID_ATTENDANCE_STATUSES)[number])
+    ) {
       return NextResponse.json(
         { success: false, error: "status must be one of: PRESENT, ABSENT, HALF_DAY, LEAVE" },
         { status: 400 }
@@ -246,14 +344,18 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: {
+      data: serializeData({
         ...attendance,
-        attendanceId: attendance.attendanceId.toString(),
+        id: attendance.attendanceId.toString(),
+        date: attendance.attendanceDate,
         employeeId: attendance.employeeId.toString(),
-      },
+      }),
     });
   } catch (error) {
     console.error("Error updating attendance:", error);
-    return NextResponse.json({ success: false, error: "Failed to update attendance" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "Failed to update attendance" },
+      { status: 500 }
+    );
   }
 }

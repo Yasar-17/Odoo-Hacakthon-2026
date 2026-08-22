@@ -5,76 +5,20 @@ import Link from "next/link";
 import Avatar from "@/components/ui/Avatar";
 import Button from "@/components/ui/Button";
 import EmptyState from "@/components/ui/EmptyState";
+import Icon from "@/components/ui/Icon";
 import { useToast } from "@/components/ui/Toast";
 
-interface Employee {
-  firstName: string;
-  lastName: string;
-  designation?: string | null;
-  department?: string | null;
-  profilePicture?: string | null;
-}
-
-interface AttendanceRecord {
-  id: string;
-  date: string;
-  checkIn: string | null;
-  checkOut: string | null;
-  status: "PRESENT" | "ABSENT" | "HALF_DAY" | "LEAVE";
-}
-
-type ActivityType = "leave" | "attendance" | "profile" | "payroll";
-
-interface ActivityItem {
-  type: ActivityType;
-  description: string;
-  timestamp: string;
-}
-
-const activityIcons: Record<ActivityType, { icon: React.ReactNode; bg: string }> = {
-  leave: {
-    bg: "bg-surface-100 text-surface-700",
-    icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />,
-  },
-  attendance: {
-    bg: "bg-surface-100 text-surface-700",
-    icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />,
-  },
-  profile: {
-    bg: "bg-surface-100 text-surface-700",
-    icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />,
-  },
-  payroll: {
-    bg: "bg-surface-100 text-surface-700",
-    icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />,
-  },
-};
+interface Employee { firstName: string; lastName: string; designation?: string | null; department?: string | null; profilePicture?: string | null; }
+interface AttendanceRecord { id: string; date: string; checkIn: string | null; checkOut: string | null; status: "PRESENT" | "ABSENT" | "HALF_DAY" | "LEAVE"; }
 
 function timeAgo(iso: string): string {
   const seconds = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
   if (seconds < 60) return "just now";
   const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes} minute${minutes > 1 ? "s" : ""} ago`;
+  if (minutes < 60) return `${minutes}m ago`;
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours} hour${hours > 1 ? "s" : ""} ago`;
-  const days = Math.floor(hours / 24);
-  return `${days} day${days > 1 ? "s" : ""} ago`;
-}
-
-function CardSkeleton() {
-  return (
-    <div className="bg-white rounded-xl border border-surface-200 p-5 animate-pulse">
-      <div className="flex items-center gap-3 mb-5">
-        <div className="w-10 h-10 rounded-lg bg-surface-200" />
-        <div className="space-y-2 flex-1">
-          <div className="h-3 bg-surface-200 rounded w-1/2" />
-          <div className="h-2.5 bg-surface-100 rounded w-1/3" />
-        </div>
-      </div>
-      <div className="h-3 bg-surface-200 rounded w-3/4 mb-2" />
-      <div className="h-8 bg-surface-100 rounded-lg mt-4" />
-    </div>
-  );
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.floor(hours / 24)}d ago`;
 }
 
 export default function DashboardPage() {
@@ -97,15 +41,12 @@ export default function DashboardPage() {
     setLoading(false);
   };
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  useEffect(() => { loadData(); }, []);
 
   const today = new Date().toISOString().split("T")[0];
   const todayRecord = attendance.find((r) => r.date.split("T")[0] === today);
   const hasCheckedIn = !!todayRecord?.checkIn;
   const hasCheckedOut = !!todayRecord?.checkOut;
-
   const pendingLeaves = leaves.filter((l) => l.status === "PENDING").length;
 
   const monthRecords = attendance.filter((r) => {
@@ -120,192 +61,135 @@ export default function DashboardPage() {
     setActionLoading(true);
     const action = hasCheckedIn ? "checkout" : "checkin";
     try {
-      const res = await fetch("/api/attendance", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action }),
-      });
+      const res = await fetch("/api/attendance", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action }) });
       const data = await res.json();
-      if (data.success) {
-        toast("success", hasCheckedIn ? "Checked out successfully" : "Checked in successfully");
-        await loadData();
-      } else {
-        toast("error", data.error ?? "Something went wrong");
-      }
-    } catch {
-      toast("error", "Something went wrong");
-    }
+      if (data.success) { toast("success", hasCheckedIn ? "Checked out successfully" : "Checked in successfully"); await loadData(); }
+      else { toast("error", data.error ?? "Something went wrong"); }
+    } catch { toast("error", "Something went wrong"); }
     setActionLoading(false);
   };
 
-  // Build activity feed
-  const activities: ActivityItem[] = [];
+  const activities: { icon: string; desc: string; time: string }[] = [];
   leaves.slice(0, 4).forEach((l: Record<string, unknown>) => {
     const status = l.status as string;
-    if (status === "APPROVED") activities.push({ type: "leave", description: `Your ${String(l.type).toLowerCase()} leave was approved`, timestamp: String(l.createdAt) });
-    else if (status === "REJECTED") activities.push({ type: "leave", description: `Your ${String(l.type).toLowerCase()} leave was rejected`, timestamp: String(l.createdAt) });
-    else if (status === "PENDING") activities.push({ type: "leave", description: `You applied for ${String(l.type).toLowerCase()} leave`, timestamp: String(l.createdAt) });
+    const t = String(l.type).toLowerCase();
+    if (status === "APPROVED") activities.push({ icon: "check_circle", desc: `Your ${t} leave was approved`, time: String(l.createdAt) });
+    else if (status === "REJECTED") activities.push({ icon: "cancel", desc: `Your ${t} leave was rejected`, time: String(l.createdAt) });
+    else if (status === "PENDING") activities.push({ icon: "date_range", desc: `You applied for ${t} leave`, time: String(l.createdAt) });
   });
   attendance.slice(0, 4).forEach((r) => {
-    if (r.checkIn) activities.push({ type: "attendance", description: `Checked in at ${new Date(r.checkIn).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}`, timestamp: r.checkIn });
+    if (r.checkIn) activities.push({ icon: "event_available", desc: `Checked in at ${new Date(r.checkIn).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}`, time: r.checkIn });
   });
-
-  activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  activities.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
   const recentActivity = activities.slice(0, 6);
 
   const fullName = employee ? `${employee.firstName} ${employee.lastName}` : "";
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map((n) => <CardSkeleton key={n} />)}
-        </div>
-        <div className="bg-white rounded-xl border border-surface-200 p-5 animate-pulse">
-          <div className="h-4 bg-surface-200 rounded w-40 mb-5" />
-          {[1, 2, 3].map((n) => (
-            <div key={n} className="flex items-center gap-3 py-3 border-b border-surface-100 last:border-0">
-              <div className="w-8 h-8 rounded-full bg-surface-200 shrink-0" />
-              <div className="h-3 bg-surface-100 rounded flex-1" />
-              <div className="h-2.5 bg-surface-100 rounded w-20" />
-            </div>
-          ))}
+      <div className="flex flex-col gap-gutter">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter">
+          {[1, 2, 3, 4].map((n) => <div key={n} className="bg-surface-pure rounded-xl p-6 border border-border-light animate-pulse h-40" />)}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Quick-access cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+    <div className="flex flex-col gap-gutter">
+      <header className="flex flex-col md:flex-row md:items-end justify-between gap-stack-md">
+        <div>
+          <h1 className="font-headline text-headline-lg-mobile md:text-headline-xl text-primary tracking-tight mb-2">Welcome back, {employee?.firstName || "Employee"}</h1>
+          <p className="text-body-lg text-secondary">Here&apos;s your attendance and leave summary for today.</p>
+        </div>
+      </header>
+
+      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter">
         {/* Profile card */}
-        <div className="bg-white rounded-xl border border-surface-200 p-5 flex flex-col">
-          <div className="w-10 h-10 rounded-lg bg-surface-900 text-white flex items-center justify-center mb-4">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-            </svg>
+        <div className="bg-surface-pure rounded-xl p-6 ambient-shadow border border-surface-variant flex flex-col">
+          <div className="w-12 h-12 bg-secondary-container rounded-lg text-on-secondary-container flex items-center justify-center mb-4">
+            <Icon name="person" filled className="text-[24px]" />
           </div>
           <div className="flex items-center gap-3 mb-4">
-            <Avatar src={employee?.profilePicture} name={fullName} size="lg" className="!w-16 !h-16" />
+            <Avatar src={employee?.profilePicture} name={fullName} size="md" />
             <div className="min-w-0">
-              <p className="font-semibold text-surface-900 truncate">{fullName}</p>
-              <p className="text-sm text-surface-500 truncate">{employee?.designation || "—"}</p>
+              <p className="font-headline text-body-lg font-semibold text-primary truncate">{fullName}</p>
+              <p className="text-body-sm text-secondary truncate">{employee?.designation || "—"}</p>
             </div>
           </div>
-          <Link
-            href="/dashboard/profile"
-            className="mt-auto inline-flex items-center gap-1 text-sm font-medium text-surface-900 hover:underline"
-          >
-            View Profile
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-            </svg>
+          <Link href="/dashboard/profile" className="mt-auto inline-flex items-center gap-1 text-label-md uppercase text-primary hover:underline">
+            View Profile <Icon name="arrow_forward" className="text-[16px]" />
           </Link>
         </div>
 
         {/* Attendance card */}
-        <div className="bg-white rounded-xl border border-surface-200 p-5 flex flex-col">
-          <div className="w-10 h-10 rounded-lg bg-surface-900 text-white flex items-center justify-center mb-4">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
+        <div className="bg-surface-pure rounded-xl p-6 ambient-shadow border border-surface-variant flex flex-col">
+          <div className="w-12 h-12 bg-secondary-container rounded-lg text-on-secondary-container flex items-center justify-center mb-4">
+            <Icon name="event_available" filled className="text-[24px]" />
           </div>
-          <p className="text-xs font-mono uppercase tracking-wide text-surface-400 mb-1">
-            {new Date().toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })}
+          <p className="text-label-md text-secondary uppercase mb-1">{new Date().toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })}</p>
+          <p className="text-body-sm text-on-surface-variant mb-4">
+            {hasCheckedIn && todayRecord?.checkIn ? `Checked in at ${new Date(todayRecord.checkIn).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}` : hasCheckedOut ? "Day complete" : "Not checked in yet"}
           </p>
-          <p className="text-sm font-medium text-surface-700 mb-4">
-            {hasCheckedIn && todayRecord?.checkIn
-              ? `Checked in at ${new Date(todayRecord.checkIn).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}`
-              : hasCheckedOut
-              ? "Day complete"
-              : "Not checked in yet"}
-          </p>
-          <Button
-            onClick={handleCheckInOut}
-            loading={actionLoading}
-            disabled={hasCheckedOut}
-            variant={hasCheckedIn ? "secondary" : "primary"}
-            arrow={!hasCheckedIn}
-            className="mt-auto w-full"
-          >
+          <Button onClick={handleCheckInOut} loading={actionLoading} disabled={hasCheckedOut} variant={hasCheckedIn ? "secondary" : "primary"} arrow={!hasCheckedIn} className="mt-auto w-full">
             {hasCheckedIn ? "Check Out" : "Check In"}
           </Button>
         </div>
 
-        {/* Leave Requests card */}
-        <div className="bg-white rounded-xl border border-surface-200 p-5 flex flex-col">
-          <div className="w-10 h-10 rounded-lg bg-surface-900 text-white flex items-center justify-center mb-4">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
+        {/* Leave card */}
+        <div className="bg-surface-pure rounded-xl p-6 ambient-shadow border border-surface-variant flex flex-col">
+          <div className="w-12 h-12 bg-secondary-container rounded-lg text-on-secondary-container flex items-center justify-center mb-4">
+            <Icon name="date_range" filled className="text-[24px]" />
           </div>
           <div className="mb-4">
-            <span className="text-3xl font-bold font-mono text-surface-900">{pendingLeaves}</span>
-            <p className="text-sm text-surface-500 mt-0.5">Pending Requests</p>
+            <span className="font-headline text-headline-lg text-primary">{pendingLeaves}</span>
+            <p className="text-body-sm text-secondary mt-0.5">Pending Requests</p>
           </div>
-          <Link
-            href="/dashboard/leave?apply=1"
-            className="mt-auto w-full inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-lg bg-surface-100 text-surface-700 border border-surface-300 hover:bg-surface-200 transition-colors"
-          >
+          <Link href="/dashboard/leave?apply=1" className="mt-auto w-full inline-flex items-center justify-center px-4 py-2.5 text-label-md uppercase tracking-wider rounded bg-surface-container-low text-secondary border border-border-light hover:bg-surface-container-high hover:text-primary transition-colors">
             Apply for Leave
           </Link>
         </div>
 
-        {/* Quick stat card */}
-        <div className="bg-white rounded-xl border border-surface-200 p-5 flex flex-col">
-          <div className="w-10 h-10 rounded-lg bg-surface-900 text-white flex items-center justify-center mb-4">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-            </svg>
+        {/* Progress card */}
+        <div className="bg-surface-pure rounded-xl p-6 ambient-shadow border border-surface-variant flex flex-col">
+          <div className="w-12 h-12 bg-secondary-container rounded-lg text-on-secondary-container flex items-center justify-center mb-4">
+            <Icon name="trending_up" filled className="text-[24px]" />
           </div>
           <div className="mb-1">
-            <span className="text-3xl font-bold font-mono text-surface-900">{daysPresent}</span>
-            <span className="text-sm font-mono text-surface-400 ml-1.5">/{workingDays} days</span>
+            <span className="font-headline text-headline-lg text-primary">{daysPresent}</span>
+            <span className="text-body-sm text-secondary ml-1.5">/ {workingDays} days</span>
           </div>
-          <p className="text-sm text-surface-500 mb-3">Present this month</p>
+          <p className="text-body-sm text-secondary mb-3">Present this month</p>
           <div className="mt-auto">
-            <div className="h-1.5 bg-surface-100 rounded-full overflow-hidden">
-              <div className="h-full bg-surface-900 rounded-full transition-all" style={{ width: `${progressPercent}%` }} />
+            <div className="h-2 bg-surface-container-high rounded-full overflow-hidden">
+              <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${progressPercent}%` }} />
             </div>
-            <p className="text-xs text-surface-400 mt-1.5 font-mono">{progressPercent}%</p>
+            <p className="text-label-md text-secondary mt-1.5 uppercase">{progressPercent}%</p>
           </div>
         </div>
-      </div>
+      </section>
 
       {/* Recent activity */}
-      <div className="bg-white rounded-xl border border-surface-200">
-        <div className="px-5 py-4 border-b border-surface-200">
-          <h2 className="text-base font-semibold text-surface-900">Recent Activity</h2>
+      <div className="bg-surface-pure rounded-xl p-container-padding ambient-shadow border border-surface-variant flex flex-col">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="font-headline text-headline-md text-primary">Recent Activity</h2>
         </div>
-
         {recentActivity.length === 0 ? (
-          <EmptyState
-            icon={
-              <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            }
-            title="No recent activity"
-            description="Your check-ins, leave requests, and updates will show up here."
-          />
+          <EmptyState icon="history" title="No recent activity" description="Your check-ins, leave requests, and updates will show up here." />
         ) : (
-          <ul>
-            {recentActivity.map((item, i) => {
-              const meta = activityIcons[item.type];
-              return (
-                <li key={i} className={`flex items-center gap-3 px-5 py-3.5 ${i < recentActivity.length - 1 ? "border-b border-surface-100" : ""}`}>
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${meta.bg}`}>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      {meta.icon}
-                    </svg>
-                  </div>
-                  <p className="text-sm text-surface-700 flex-1 min-w-0">{item.description}</p>
-                  <span className="text-xs text-surface-400 shrink-0">{timeAgo(item.timestamp)}</span>
-                </li>
-              );
-            })}
-          </ul>
+          <div className="flex flex-col gap-4">
+            {recentActivity.map((item, i) => (
+              <div key={i} className="flex gap-4 items-start">
+                <div className="w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center shrink-0 text-secondary">
+                  <Icon name={item.icon} className="text-[20px]" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-body-sm text-on-surface">{item.desc}</p>
+                  <p className="text-label-md text-secondary mt-0.5 uppercase">{timeAgo(item.time)}</p>
+                </div>
+              </div>
+            ))}
+          </div>
         )}
       </div>
     </div>

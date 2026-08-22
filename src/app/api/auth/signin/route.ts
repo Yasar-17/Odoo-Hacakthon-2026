@@ -1,12 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { comparePassword, signToken } from "@/lib/auth";
+import { comparePassword, signToken, getUserRoles, serializeData } from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
   try {
-    const { email, password } = await req.json();
+    let body: { email?: unknown; password?: unknown };
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json(
+        { success: false, error: "Invalid JSON body" },
+        { status: 400 }
+      );
+    }
 
-    if (!email || !password) {
+    const { email, password } = body;
+
+    if (!email || !password || typeof email !== "string" || typeof password !== "string") {
       return NextResponse.json(
         { success: false, error: "Email and password are required" },
         { status: 400 }
@@ -33,13 +43,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const userRoles = await prisma.userRole.findMany({
-      where: { userId: user.userId },
-      include: { role: true },
-    });
-    const role = userRoles.some((ur) => ur.role.roleName?.toUpperCase() === "ADMIN")
-      ? "ADMIN"
-      : "EMPLOYEE";
+    const roles = await getUserRoles(user.userId);
+    const role = roles.includes("ADMIN") ? "ADMIN" : "EMPLOYEE";
 
     const token = signToken({
       userId: user.userId.toString(),
@@ -50,13 +55,19 @@ export async function POST(req: NextRequest) {
 
     const response = NextResponse.json({
       success: true,
-      data: {
-        userId: user.userId.toString(),
+      data: serializeData({
+        id: user.userId,
         employeeId: user.employeeId,
         email: user.email,
         role,
-        employee: user.employee,
-      },
+        employee: user.employee
+          ? {
+              ...user.employee,
+              department: null,
+              designation: null,
+            }
+          : null,
+      }),
     });
 
     response.cookies.set("token", token, {

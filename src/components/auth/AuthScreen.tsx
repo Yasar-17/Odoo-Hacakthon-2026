@@ -144,27 +144,30 @@ export default function AuthScreen({ initialMode }: { initialMode: Mode }) {
         </div>
 
         {/* Logo */}
-        <div className="relative z-10">
+        <div className="relative z-10 flex items-center gap-2">
+          <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
+            <span className="text-primary font-bold text-sm">D</span>
+          </div>
           <span className="text-xl font-bold text-white">Dayflow</span>
         </div>
 
         {/* Quote */}
         <div className="relative z-10 my-auto">
-          <svg className="w-10 h-10 text-surface-600 mb-6" fill="currentColor" viewBox="0 0 24 24">
+          <svg className="w-10 h-10 text-secondary mb-6" fill="currentColor" viewBox="0 0 24 24">
             <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10H14.017zM0 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151C7.546 6.068 5.983 8.789 5.983 11H10v10H0z" />
           </svg>
           <p className="text-[32px] leading-snug font-semibold text-white mb-6">
             Dayflow tracks every check-in, flags every leave conflict, and keeps payroll{" "}
-            <span className="text-surface-500">accurate without the back-and-forth.</span>
+            <span className="text-secondary">accurate without the back-and-forth.</span>
           </p>
-          <p className="font-mono text-xs uppercase tracking-wider text-surface-500">
+          <p className="font-mono text-xs uppercase tracking-wider text-secondary">
             HR Officer &bull; Enterprise Team
           </p>
         </div>
 
         {/* Stats */}
         <div className="relative z-10">
-          <p className="font-mono text-xs text-surface-600">
+          <p className="font-mono text-xs text-secondary">
             500+ employees managed &bull; 50+ companies &bull; 99% attendance accuracy
           </p>
         </div>
@@ -174,13 +177,13 @@ export default function AuthScreen({ initialMode }: { initialMode: Mode }) {
       <div className="w-[55%] bg-[#f8f8f8] flex items-center justify-center p-10 h-screen overflow-y-auto">
         <div className="w-full max-w-[420px]">
           {/* Tab Toggle */}
-          <div className="flex bg-surface-200 rounded-lg p-1 mb-10">
+          <div className="flex bg-surface-container-low rounded-lg p-1 mb-10">
             <button
               onClick={() => switchMode("signin")}
               className={`flex-1 py-2.5 text-sm font-medium rounded-md transition-all ${
                 mode === "signin"
-                  ? "bg-white text-surface-900 shadow-sm"
-                  : "text-surface-500 hover:text-surface-700"
+                  ? "bg-white text-primary shadow-sm"
+                  : "text-secondary hover:text-primary"
               }`}
             >
               Sign In
@@ -189,8 +192,8 @@ export default function AuthScreen({ initialMode }: { initialMode: Mode }) {
               onClick={() => switchMode("signup")}
               className={`flex-1 py-2.5 text-sm font-medium rounded-md transition-all ${
                 mode === "signup"
-                  ? "bg-white text-surface-900 shadow-sm"
-                  : "text-surface-500 hover:text-surface-700"
+                  ? "bg-white text-primary shadow-sm"
+                  : "text-secondary hover:text-primary"
               }`}
             >
               Sign Up
@@ -207,8 +210,8 @@ export default function AuthScreen({ initialMode }: { initialMode: Mode }) {
                   : "opacity-0 -translate-y-3 pointer-events-none"
               }`}
             >
-              <h1 className="text-2xl font-bold text-surface-900 mb-1">Welcome back</h1>
-              <p className="text-surface-500 text-sm mb-8">Sign in to your account</p>
+              <h1 className="text-2xl font-bold text-primary mb-1">Welcome back</h1>
+              <p className="text-secondary text-sm mb-8">Sign in to your account</p>
 
               <form onSubmit={handleSignIn} className="space-y-5">
                 {signInError && (
@@ -218,9 +221,9 @@ export default function AuthScreen({ initialMode }: { initialMode: Mode }) {
                 )}
 
                 <div>
-                  <label className="block text-sm font-medium text-surface-700 mb-1.5">Email</label>
+                  <label className="block text-sm font-medium text-secondary mb-1.5">Email</label>
                   <div className="relative">
-                    <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-on-tertiary-container" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                     </svg>
                     <input
@@ -228,8 +231,8 @@ export default function AuthScreen({ initialMode }: { initialMode: Mode }) {
                       placeholder="you@company.com"
                       value={signInEmail}
                       onChange={(e) => { setSignInEmail(e.target.value); setSignInError(""); }}
-                      className={`w-full pl-10 pr-4 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-surface-900 focus:border-surface-900 transition-colors bg-white ${
-                        signInError ? "border-red-300" : "border-surface-300"
+                      className={`w-full pl-10 pr-4 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white ${
+                        signInError ? "border-red-300" : "border-border-light"
                       }`}
                     />
                   </div>
@@ -237,11 +240,11 @@ export default function AuthScreen({ initialMode }: { initialMode: Mode }) {
 
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-sm font-medium text-surface-700">Password</label>
-                    <button type="button" className="text-xs text-surface-500 hover:text-surface-700">Forgot?</button>
+                    <label className="text-sm font-medium text-secondary">Password</label>
+                    <button type="button" className="text-xs text-secondary hover:text-primary">Forgot?</button>
                   </div>
                   <div className="relative">
-                    <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-on-tertiary-container" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                     </svg>
                     <input
@@ -249,8 +252,8 @@ export default function AuthScreen({ initialMode }: { initialMode: Mode }) {
                       placeholder="Enter your password"
                       value={signInPassword}
                       onChange={(e) => { setSignInPassword(e.target.value); setSignInError(""); }}
-                      className={`w-full pl-10 pr-4 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-surface-900 focus:border-surface-900 transition-colors bg-white ${
-                        signInError ? "border-red-300" : "border-surface-300"
+                      className={`w-full pl-10 pr-4 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white ${
+                        signInError ? "border-red-300" : "border-border-light"
                       }`}
                     />
                   </div>
@@ -259,7 +262,7 @@ export default function AuthScreen({ initialMode }: { initialMode: Mode }) {
                 <button
                   type="submit"
                   disabled={signInLoading}
-                  className="w-full flex items-center justify-center gap-2 py-3 bg-surface-900 text-white rounded-lg text-sm font-medium hover:bg-surface-800 disabled:opacity-50 transition-colors"
+                  className="w-full flex items-center justify-center gap-2 py-3 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary-container disabled:opacity-50 transition-colors"
                 >
                   {signInLoading ? "Signing in..." : "Sign In"}
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -268,9 +271,9 @@ export default function AuthScreen({ initialMode }: { initialMode: Mode }) {
                 </button>
               </form>
 
-              <p className="text-center text-sm text-surface-500 mt-8">
+              <p className="text-center text-sm text-secondary mt-8">
                 Don&apos;t have an account?{" "}
-                <button onClick={() => switchMode("signup")} className="text-surface-900 font-semibold hover:underline">
+                <button onClick={() => switchMode("signup")} className="text-primary font-semibold hover:underline">
                   Sign up
                 </button>
               </p>
@@ -284,8 +287,8 @@ export default function AuthScreen({ initialMode }: { initialMode: Mode }) {
                   : "opacity-0 translate-y-3 pointer-events-none"
               }`}
             >
-              <h1 className="text-2xl font-bold text-surface-900 mb-1">Create your account</h1>
-              <p className="text-surface-500 text-sm mb-8">Get started with Dayflow</p>
+              <h1 className="text-2xl font-bold text-primary mb-1">Create your account</h1>
+              <p className="text-secondary text-sm mb-8">Get started with Dayflow</p>
 
               <form onSubmit={handleSignUp} className="space-y-5">
                 {signUpApiError && (
@@ -295,23 +298,23 @@ export default function AuthScreen({ initialMode }: { initialMode: Mode }) {
                 )}
 
                 <div>
-                  <label className="block text-sm font-medium text-surface-700 mb-1.5">Employee ID</label>
+                  <label className="block text-sm font-medium text-secondary mb-1.5">Employee ID</label>
                   <input
                     type="text"
                     placeholder="EMP001"
                     value={signUpForm.employeeId}
                     onChange={(e) => updateSignUp("employeeId", e.target.value)}
-                    className={`w-full px-4 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-surface-900 focus:border-surface-900 transition-colors bg-white ${
-                      signUpErrors.employeeId ? "border-red-300" : "border-surface-300"
+                    className={`w-full px-4 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white ${
+                      signUpErrors.employeeId ? "border-red-300" : "border-border-light"
                     }`}
                   />
                   {signUpErrors.employeeId && <p className="text-xs text-red-600 mt-1">{signUpErrors.employeeId}</p>}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-surface-700 mb-1.5">Email</label>
+                  <label className="block text-sm font-medium text-secondary mb-1.5">Email</label>
                   <div className="relative">
-                    <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-on-tertiary-container" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                     </svg>
                     <input
@@ -319,19 +322,19 @@ export default function AuthScreen({ initialMode }: { initialMode: Mode }) {
                       placeholder="you@company.com"
                       value={signUpForm.email}
                       onChange={(e) => updateSignUp("email", e.target.value)}
-                      className={`w-full pl-10 pr-4 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-surface-900 focus:border-surface-900 transition-colors bg-white ${
-                        signUpErrors.email ? "border-red-300" : "border-surface-300"
+                      className={`w-full pl-10 pr-4 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white ${
+                        signUpErrors.email ? "border-red-300" : "border-border-light"
                       }`}
                     />
                   </div>
-                  <p className="text-xs text-surface-400 mt-1">Verification email will be sent</p>
+                  <p className="text-xs text-on-tertiary-container mt-1">Verification email will be sent</p>
                   {signUpErrors.email && <p className="text-xs text-red-600 mt-1">{signUpErrors.email}</p>}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-surface-700 mb-1.5">Password</label>
+                  <label className="block text-sm font-medium text-secondary mb-1.5">Password</label>
                   <div className="relative">
-                    <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-on-tertiary-container" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                     </svg>
                     <input
@@ -339,8 +342,8 @@ export default function AuthScreen({ initialMode }: { initialMode: Mode }) {
                       placeholder="Create a password"
                       value={signUpForm.password}
                       onChange={(e) => updateSignUp("password", e.target.value)}
-                      className={`w-full pl-10 pr-4 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-surface-900 focus:border-surface-900 transition-colors bg-white ${
-                        signUpErrors.password ? "border-red-300" : "border-surface-300"
+                      className={`w-full pl-10 pr-4 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white ${
+                        signUpErrors.password ? "border-red-300" : "border-border-light"
                       }`}
                     />
                   </div>
@@ -348,7 +351,7 @@ export default function AuthScreen({ initialMode }: { initialMode: Mode }) {
                   {signUpForm.password && (
                     <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1">
                       {passwordRules.map((rule) => (
-                        <p key={rule.label} className={`text-xs ${rule.test(signUpForm.password) ? "text-accent-600" : "text-surface-400"}`}>
+                        <p key={rule.label} className={`text-xs ${rule.test(signUpForm.password) ? "text-success-text" : "text-on-tertiary-container"}`}>
                           {rule.test(signUpForm.password) ? "✓" : "○"} {rule.label}
                         </p>
                       ))}
@@ -357,9 +360,9 @@ export default function AuthScreen({ initialMode }: { initialMode: Mode }) {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-surface-700 mb-1.5">Confirm Password</label>
+                  <label className="block text-sm font-medium text-secondary mb-1.5">Confirm Password</label>
                   <div className="relative">
-                    <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-on-tertiary-container" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                     </svg>
                     <input
@@ -367,8 +370,8 @@ export default function AuthScreen({ initialMode }: { initialMode: Mode }) {
                       placeholder="Confirm your password"
                       value={signUpForm.confirmPassword}
                       onChange={(e) => updateSignUp("confirmPassword", e.target.value)}
-                      className={`w-full pl-10 pr-4 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-surface-900 focus:border-surface-900 transition-colors bg-white ${
-                        signUpErrors.confirmPassword ? "border-red-300" : "border-surface-300"
+                      className={`w-full pl-10 pr-4 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white ${
+                        signUpErrors.confirmPassword ? "border-red-300" : "border-border-light"
                       }`}
                     />
                   </div>
@@ -376,7 +379,7 @@ export default function AuthScreen({ initialMode }: { initialMode: Mode }) {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-surface-700 mb-1.5">Role</label>
+                  <label className="block text-sm font-medium text-secondary mb-1.5">Role</label>
                   <div className="flex gap-3">
                     {["EMPLOYEE", "ADMIN"].map((r) => (
                       <button
@@ -385,8 +388,8 @@ export default function AuthScreen({ initialMode }: { initialMode: Mode }) {
                         onClick={() => updateSignUp("role", r)}
                         className={`flex-1 py-2.5 rounded-lg border text-sm font-medium transition-all ${
                           signUpForm.role === r
-                            ? "bg-surface-900 text-white border-surface-900"
-                            : "bg-white text-surface-600 border-surface-300 hover:border-surface-400"
+                            ? "bg-primary text-white border-primary"
+                            : "bg-white text-secondary border-border-light hover:border-outline"
                         }`}
                       >
                         {r === "ADMIN" ? "HR / Admin" : "Employee"}
@@ -398,7 +401,7 @@ export default function AuthScreen({ initialMode }: { initialMode: Mode }) {
                 <button
                   type="submit"
                   disabled={signUpLoading}
-                  className="w-full flex items-center justify-center gap-2 py-3 bg-surface-900 text-white rounded-lg text-sm font-medium hover:bg-surface-800 disabled:opacity-50 transition-colors"
+                  className="w-full flex items-center justify-center gap-2 py-3 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary-container disabled:opacity-50 transition-colors"
                 >
                   {signUpLoading ? "Creating account..." : "Sign Up"}
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -407,9 +410,9 @@ export default function AuthScreen({ initialMode }: { initialMode: Mode }) {
                 </button>
               </form>
 
-              <p className="text-center text-sm text-surface-500 mt-8">
+              <p className="text-center text-sm text-secondary mt-8">
                 Already have an account?{" "}
-                <button onClick={() => switchMode("signin")} className="text-surface-900 font-semibold hover:underline">
+                <button onClick={() => switchMode("signin")} className="text-primary font-semibold hover:underline">
                   Sign in
                 </button>
               </p>

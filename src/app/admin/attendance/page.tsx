@@ -1,20 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
+import PageHeader from "@/components/ui/PageHeader";
 import EmptyState from "@/components/ui/EmptyState";
+import Icon from "@/components/ui/Icon";
 
 export default function AdminAttendancePage() {
   const [records, setRecords] = useState<Record<string, unknown>[]>([]);
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
 
   useEffect(() => {
-    fetch(`/api/attendance?date=${date}`)
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.success) setRecords(d.data || []);
-      });
+    fetch(`/api/attendance?date=${date}`).then((r) => r.json()).then((d) => { if (d.success) setRecords(d.data || []); });
   }, [date]);
 
   const statusVariant = (s: string) => {
@@ -25,72 +22,46 @@ export default function AdminAttendancePage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-surface-900 tracking-tight">Attendance Records</h1>
-        <input
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          className="px-3 py-2 border border-surface-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-surface-900 focus:border-surface-900"
-        />
-      </div>
+    <div className="flex flex-col gap-gutter">
+      <PageHeader title="Attendance Records" subtitle="Monitor check-in and check-out activity across your team.">
+        <div className="relative">
+          <Icon name="calendar_today" className="absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[20px] pointer-events-none" />
+          <input type="date" value={date} onChange={(e) => setDate(e.target.value)}
+            className="pl-10 pr-4 py-2.5 bg-surface-pure border border-border-light rounded-lg text-body-sm text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" />
+        </div>
+      </PageHeader>
 
-      <Card padding={false}>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+      {records.length === 0 ? (
+        <div className="bg-surface-pure border border-border-light rounded-lg">
+          <EmptyState icon="event_available" title="No attendance records" description="Nobody has checked in for this date yet." />
+        </div>
+      ) : (
+        <section className="bg-surface-pure border border-border-light rounded-lg overflow-x-auto">
+          <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-surface-200">
-                <th className="text-left py-3 px-4 font-medium text-surface-600">Employee</th>
-                <th className="text-left py-3 px-4 font-medium text-surface-600">Date</th>
-                <th className="text-left py-3 px-4 font-medium text-surface-600">Check In</th>
-                <th className="text-left py-3 px-4 font-medium text-surface-600">Check Out</th>
-                <th className="text-left py-3 px-4 font-medium text-surface-600">Status</th>
+              <tr className="border-b border-border-light bg-surface-subtle">
+                {["Employee", "Date", "Check In", "Check Out", "Status"].map((h, i) => (
+                  <th key={i} className="py-4 px-6 text-label-md text-secondary uppercase tracking-wider">{h}</th>
+                ))}
               </tr>
             </thead>
-            <tbody>
-              {records.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="py-2">
-                    <EmptyState
-                      icon={
-                        <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                      }
-                      title="No attendance records"
-                      description="Nobody has checked in for this date yet."
-                    />
-                  </td>
-                </tr>
-              ) : (
-                records.map((rec, i) => {
-                  const emp = rec.employee as Record<string, unknown> | undefined;
-                  return (
-                    <tr key={i} className="border-b border-surface-100 hover:bg-surface-50">
-                      <td className="py-3 px-4 font-medium">
-                        {emp?.firstName as string} {emp?.lastName as string}
-                      </td>
-                      <td className="py-3 px-4">
-                        {new Date(rec.date as string).toLocaleDateString()}
-                      </td>
-                      <td className="py-3 px-4">
-                        {rec.checkIn ? new Date(rec.checkIn as string).toLocaleTimeString() : "-"}
-                      </td>
-                      <td className="py-3 px-4">
-                        {rec.checkOut ? new Date(rec.checkOut as string).toLocaleTimeString() : "-"}
-                      </td>
-                      <td className="py-3 px-4">
-                        <Badge variant={statusVariant(rec.status as string)}>{rec.status as string}</Badge>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
+            <tbody className="divide-y divide-border-light text-body-md">
+              {records.map((rec, i) => {
+                const emp = rec.employee as Record<string, unknown> | undefined;
+                return (
+                  <tr key={i} className="hover:bg-surface-container transition-colors">
+                    <td className="py-4 px-6 font-semibold text-primary">{emp?.firstName as string} {emp?.lastName as string}</td>
+                    <td className="py-4 px-6 text-on-surface-variant">{new Date(rec.date as string).toLocaleDateString()}</td>
+                    <td className="py-4 px-6 text-on-surface-variant">{rec.checkIn ? new Date(rec.checkIn as string).toLocaleTimeString() : "—"}</td>
+                    <td className="py-4 px-6 text-on-surface-variant">{rec.checkOut ? new Date(rec.checkOut as string).toLocaleTimeString() : "—"}</td>
+                    <td className="py-4 px-6"><Badge variant={statusVariant(rec.status as string)}>{rec.status as string}</Badge></td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
-        </div>
-      </Card>
+        </section>
+      )}
     </div>
   );
 }

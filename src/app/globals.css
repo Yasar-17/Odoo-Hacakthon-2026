@@ -1,4 +1,5 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Work+Sans:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -23,8 +24,8 @@
 }
 
 :root {
-  --foreground: #111111;
-  --background: #fafafa;
+  --foreground: #1a1c1c;
+  --background: #f9f9f9;
 }
 
 *,
@@ -36,19 +37,41 @@
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  font-family: "Work Sans", system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-h1, h2, h3, h4 {
-  letter-spacing: -0.01em;
+h1, h2, h3, h4, h5, h6 {
+  font-family: "Manrope", system-ui, sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+.material-symbols-outlined.filled {
+  font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
 }
 
 @layer utilities {
+  .ambient-shadow {
+    box-shadow: 0px 4px 20px rgba(45, 62, 78, 0.05);
+  }
+
+  .ambient-shadow-hover {
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+  }
+
+  .ambient-shadow-hover:hover {
+    box-shadow: 0px 8px 24px rgba(45, 62, 78, 0.08);
+    transform: translateY(-2px);
+  }
+
   .scrollbar-thin {
     scrollbar-width: thin;
-    scrollbar-color: #d6d3d1 transparent;
+    scrollbar-color: #cfc4c5 transparent;
   }
 
   .scrollbar-thin::-webkit-scrollbar {
@@ -60,7 +83,7 @@ h1, h2, h3, h4 {
   }
 
   .scrollbar-thin::-webkit-scrollbar-thumb {
-    background-color: #d6d3d1;
+    background-color: #cfc4c5;
     border-radius: 3px;
   }
 }

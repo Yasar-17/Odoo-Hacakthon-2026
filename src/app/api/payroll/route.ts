@@ -1,24 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getUserFromRequest } from "@/lib/auth";
-
-function serializeData<T>(value: T): unknown {
-  return JSON.parse(
-    JSON.stringify(value, (_key, val: unknown) =>
-      typeof val === "bigint" ? val.toString() : val
-    )
-  );
-}
-
-async function isAdminUser(userId: bigint): Promise<boolean> {
-  const userRoles = await prisma.userRole.findMany({
-    where: { userId },
-    include: { role: true },
-  });
-  return userRoles.some(
-    (userRole) => userRole.role.roleName?.toUpperCase() === "ADMIN"
-  );
-}
+import { getUserFromRequest, isAdminUser, serializeData } from "@/lib/auth";
 
 function isPrismaNotFoundError(error: unknown): boolean {
   return (
@@ -111,9 +93,53 @@ const PAYROLL_SELECT = {
   employees: {
     include: {
       user: { select: { employeeId: true, email: true } },
+      salary_structures: {
+        orderBy: { effectiveFrom: "desc" as const },
+        take: 1,
+      },
     },
   },
 } as const;
+
+type PayrollRecordWithEmployee = {
+  payroll_id: bigint;
+  employee_id: bigint;
+  salary_id: bigint | null;
+  payroll_month: Date;
+  gross_salary: unknown;
+  total_deductions: unknown;
+  net_salary: unknown;
+  payment_status: string | null;
+  generated_at: Date | null;
+  employees: {
+    user: { employeeId: string; email: string } | null;
+    salary_structures?: Array<{
+      basicSalary: unknown;
+      hra: unknown;
+      allowances: unknown;
+      deductions: unknown;
+    }>;
+  };
+};
+
+function serializePayrollRecord(record: PayrollRecordWithEmployee) {
+  const structure = record.employees.salary_structures?.[0];
+  const month = record.payroll_month.getMonth() + 1;
+  const year = record.payroll_month.getFullYear();
+  return {
+    ...record,
+    id: record.payroll_id.toString(),
+    month,
+    year,
+    basicSalary: Number(record.gross_salary),
+    hra: structure ? Number(structure.hra ?? 0) : 0,
+    allowances: structure ? Number(structure.allowances ?? 0) : 0,
+    deductions: Number(record.total_deductions ?? 0),
+    netSalary: Number(record.net_salary),
+    status: record.payment_status ?? "PENDING",
+    employeeId: record.employee_id.toString(),
+  };
+}
 
 async function resolveAdminTargetEmployee(publicEmployeeId: unknown) {
   if (!publicEmployeeId || typeof publicEmployeeId !== "string") return null;
@@ -197,7 +223,10 @@ export async function GET(request: NextRequest) {
       orderBy: { payroll_month: "desc" },
     });
 
-    return NextResponse.json({ success: true, data: serializeData(payrollRecords) });
+    return NextResponse.json({
+      success: true,
+      data: serializeData(payrollRecords.map((record) => serializePayrollRecord(record))),
+    });
   } catch (error) {
     console.error("Error fetching payroll:", error);
     return NextResponse.json({ success: false, error: "Failed to fetch payroll" }, { status: 500 });
@@ -351,7 +380,10 @@ export async function POST(request: NextRequest) {
       select: PAYROLL_SELECT,
     });
 
-    return NextResponse.json({ success: true, data: serializeData(created) }, { status: 201 });
+    return NextResponse.json(
+      { success: true, data: serializeData(serializePayrollRecord(created)) },
+      { status: 201 }
+    );
   } catch (error) {
     console.error("Error creating payroll:", error);
     return NextResponse.json(
@@ -398,8 +430,9 @@ async function handleUpdate(body: Record<string, unknown>) {
   }
 
   let gross = Number(existing.gross_salary);
-  if (body.gross_salary !== undefined || body.grossSalary !== undefined) {
-    const parsedGross = parseMoney(body.gross_salary ?? body.grossSalary);
+  const grossInput = body.gross_salary ?? body.grossSalary ?? body.basicSalary;
+  if (grossInput !== undefined) {
+    const parsedGross = parseMoney(grossInput);
     if (parsedGross === null) {
       return NextResponse.json(
         { success: false, error: "grossSalary must be a non-negative number" },
@@ -463,7 +496,10 @@ async function handleUpdate(body: Record<string, unknown>) {
       data: updateData,
       select: PAYROLL_SELECT,
     });
-    return NextResponse.json({ success: true, data: serializeData(updated) });
+    return NextResponse.json({
+      success: true,
+      data: serializeData(serializePayrollRecord(updated)),
+    });
   } catch (error) {
     if (isPrismaNotFoundError(error)) {
       return NextResponse.json(

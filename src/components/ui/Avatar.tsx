@@ -14,7 +14,7 @@ interface AvatarProps {
   className?: string;
 }
 
-const sizes = { sm: "w-8 h-8 text-xs", md: "w-10 h-10 text-sm", lg: "w-14 h-14 text-base" };
+const sizes = { sm: "w-8 h-8 text-xs", md: "w-12 h-12 text-base", lg: "w-16 h-16 text-xl" };
 
 export default function Avatar({ src, name, size = "md", className = "" }: AvatarProps) {
   if (src) {
@@ -22,14 +22,14 @@ export default function Avatar({ src, name, size = "md", className = "" }: Avata
       <img
         src={src}
         alt={name}
-        className={`${sizes[size]} rounded-full object-cover ${className}`}
+        className={`${sizes[size]} rounded-full object-cover border-2 border-surface ${className}`}
       />
     );
   }
 
   return (
     <div
-      className={`${sizes[size]} rounded-full flex items-center justify-center font-semibold bg-surface-900 text-white ${className}`}
+      className={`${sizes[size]} rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-headline font-bold shrink-0 ${className}`}
     >
       {getInitials(name)}
     </div>

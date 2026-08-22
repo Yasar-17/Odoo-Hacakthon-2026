@@ -1,26 +1,35 @@
+import Icon from "@/components/ui/Icon";
+
 interface StatCardProps {
-  icon: React.ReactNode;
-  iconBg?: string;
   value: string | number;
   label: string;
-  trend?: { value: string; positive: boolean };
+  icon: string;
+  trend?: { value: string; tone: "default" | "error" };
 }
 
-export default function StatCard({ icon, iconBg, value, label, trend }: StatCardProps) {
+export default function StatCard({ value, label, icon, trend }: StatCardProps) {
   return (
-    <div className="bg-white rounded-xl border border-surface-200 p-5">
-      <div className="flex items-start justify-between mb-3">
-        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${iconBg ?? "bg-surface-900 text-white"}`}>
-          {icon}
+    <div className="bg-surface-pure rounded-xl p-6 ambient-shadow ambient-shadow-hover border border-surface-variant flex flex-col gap-4">
+      <div className="flex justify-between items-start">
+        <div className="w-12 h-12 bg-secondary-container rounded-lg text-on-secondary-container flex items-center justify-center">
+          <Icon name={icon} className="text-[24px]" filled />
         </div>
         {trend && (
-          <span className={`text-xs font-medium font-mono ${trend.positive ? "text-success-text" : "text-danger-text"}`}>
-            {trend.positive ? "+" : ""}{trend.value}
+          <span
+            className={`text-label-md uppercase px-2 py-1 rounded-full ${
+              trend.tone === "error"
+                ? "bg-error-container text-on-error-container"
+                : "bg-surface-container-low text-secondary"
+            }`}
+          >
+            {trend.value}
           </span>
         )}
       </div>
-      <div className="text-2xl font-bold font-mono text-surface-900">{value}</div>
-      <div className="text-sm text-surface-500 mt-0.5">{label}</div>
+      <div>
+        <p className="text-body-sm text-secondary mb-1">{label}</p>
+        <h3 className="font-headline text-headline-lg text-primary">{value}</h3>
+      </div>
     </div>
   );
 }
