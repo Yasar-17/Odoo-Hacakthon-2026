@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
       userId: user.id,
       employeeId: user.employeeId,
       email: user.email,
-      role: user.role,
+      role: (user.role as "EMPLOYEE" | "ADMIN") || "EMPLOYEE",
     });
 
     const response = NextResponse.json({
