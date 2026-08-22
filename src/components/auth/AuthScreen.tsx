@@ -197,15 +197,16 @@ export default function AuthScreen({ initialMode }: { initialMode: Mode }) {
             </button>
           </div>
 
-          {/* Forms with transition */}
-          <div
-            className={`transition-all duration-200 ease-in-out ${
-              transitioning ? "opacity-0 translate-y-2" : "opacity-100 translate-y-0"
-            }`}
-          >
+          {/* Forms with transition — both rendered so height stays constant */}
+          <div className="relative">
             {/* Sign In Form */}
-            {visibleMode === "signin" && (
-            <div>
+            <div
+              className={`transition-all duration-200 ease-in-out ${
+                visibleMode === "signin"
+                  ? "opacity-100 translate-y-0 relative"
+                  : "opacity-0 -translate-y-2 absolute inset-0 pointer-events-none"
+              }`}
+            >
               <h1 className="text-2xl font-bold text-surface-900 mb-1">Welcome back</h1>
               <p className="text-surface-500 text-sm mb-8">Sign in to your account</p>
 
@@ -274,11 +275,15 @@ export default function AuthScreen({ initialMode }: { initialMode: Mode }) {
                 </button>
               </p>
             </div>
-          )}
 
           {/* Sign Up Form */}
-          {visibleMode === "signup" && (
-            <div>
+            <div
+              className={`transition-all duration-200 ease-in-out ${
+                visibleMode === "signup"
+                  ? "opacity-100 translate-y-0 relative"
+                  : "opacity-0 translate-y-2 absolute inset-0 pointer-events-none"
+              }`}
+            >
               <h1 className="text-2xl font-bold text-surface-900 mb-1">Create your account</h1>
               <p className="text-surface-500 text-sm mb-8">Get started with Dayflow</p>
 
@@ -409,7 +414,6 @@ export default function AuthScreen({ initialMode }: { initialMode: Mode }) {
                 </button>
               </p>
             </div>
-          )}
           </div>
         </div>
       </div>
