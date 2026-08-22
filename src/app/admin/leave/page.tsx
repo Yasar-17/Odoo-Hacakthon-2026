@@ -5,6 +5,7 @@ import Avatar from "@/components/ui/Avatar";
 import StatusBadge from "@/components/ui/StatusBadge";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
+import EmptyState from "@/components/ui/EmptyState";
 import { useToast } from "@/components/ui/Toast";
 
 interface LeaveRecord {
@@ -119,7 +120,7 @@ export default function AdminLeavePage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-surface-900">Leave Approvals</h1>
+      <h1 className="text-xl font-bold text-surface-900 tracking-tight">Leave Approvals</h1>
 
       <div className="flex flex-col sm:flex-row sm:items-center gap-3">
         <div className="inline-flex bg-surface-200 rounded-lg p-1">
@@ -140,7 +141,7 @@ export default function AdminLeavePage() {
         <select
           value={deptFilter}
           onChange={(e) => setDeptFilter(e.target.value)}
-          className="px-3 py-2 border border-surface-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-600"
+          className="px-3 py-2 border border-surface-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-surface-900 focus:border-surface-900"
         >
           <option value="ALL">All Departments</option>
           {departments.map((d) => (
@@ -156,27 +157,24 @@ export default function AdminLeavePage() {
             placeholder="Search by employee name..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-surface-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-primary-600"
+            className="w-full pl-10 pr-4 py-2 border border-surface-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-surface-900 focus:border-surface-900"
           />
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-surface-200 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-xl border border-surface-200 overflow-hidden">
         {loading ? (
           <div className="py-16 text-center text-sm text-surface-400 animate-pulse">Loading...</div>
         ) : filtered.length === 0 ? (
-          <div className="py-16 flex flex-col items-center justify-center text-center px-6">
-            <div className="w-12 h-12 rounded-full bg-surface-100 flex items-center justify-center text-surface-300 mb-3">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <EmptyState
+            icon={
+              <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-            </div>
-            <p className="text-sm text-surface-400">
-              No {filter === "ALL" ? "" : filter.toLowerCase() + " "}leave requests
-              {deptFilter !== "ALL" ? ` in ${deptFilter}` : ""}
-              {search ? ` matching "${search}"` : ""}
-            </p>
-          </div>
+            }
+            title={`No ${filter === "ALL" ? "" : filter.toLowerCase() + " "}leave requests`}
+            description="When employees submit leave requests, they'll appear here for approval."
+          />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -261,12 +259,13 @@ export default function AdminLeavePage() {
             placeholder="Add a comment (optional)"
             value={adminComment}
             onChange={(e) => setAdminComment(e.target.value)}
-            className="w-full px-3 py-2 border border-surface-300 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-primary-600"
+            className="w-full px-3 py-2 border border-surface-300 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-surface-900 focus:border-surface-900"
           />
           <div className="flex justify-end gap-3 pt-2">
             <Button variant="ghost" onClick={() => setShowModal(false)}>Cancel</Button>
             <Button
               variant={actionType === "APPROVED" ? "primary" : "danger"}
+              arrow={actionType === "APPROVED"}
               onClick={handleConfirm}
               loading={submitting}
             >

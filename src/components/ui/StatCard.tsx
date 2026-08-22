@@ -1,6 +1,6 @@
 interface StatCardProps {
   icon: React.ReactNode;
-  iconBg: string;
+  iconBg?: string;
   value: string | number;
   label: string;
   trend?: { value: string; positive: boolean };
@@ -8,9 +8,9 @@ interface StatCardProps {
 
 export default function StatCard({ icon, iconBg, value, label, trend }: StatCardProps) {
   return (
-    <div className="bg-white rounded-xl border border-surface-200 shadow-sm p-5">
+    <div className="bg-white rounded-xl border border-surface-200 p-5">
       <div className="flex items-start justify-between mb-3">
-        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${iconBg}`}>
+        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${iconBg ?? "bg-surface-900 text-white"}`}>
           {icon}
         </div>
         {trend && (

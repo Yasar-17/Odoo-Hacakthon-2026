@@ -142,13 +142,13 @@ function EmployeeDetail({ employeeId, onBack }: { employeeId: string; onBack: ()
           <div className="h-6 bg-surface-200 rounded w-48" />
           <div className="h-10 bg-surface-200 rounded w-32" />
         </div>
-        <div className="bg-white rounded-xl border border-surface-200 shadow-sm p-6 h-96" />
+        <div className="bg-white rounded-xl border border-surface-200 p-6 h-96" />
       </div>
     );
   }
 
   if (!employee) {
-    return <div className="text-center py-20 text-surface-400">Employee not found</div>;
+    return <div className="text-center py-20 text-sm text-surface-500">Employee not found</div>;
   }
 
   const fullName = `${form.current.firstName} ${form.current.lastName}`;
@@ -160,7 +160,7 @@ function EmployeeDetail({ employeeId, onBack }: { employeeId: string; onBack: ()
         Back to Employees
       </Button>
 
-      <div className="bg-white rounded-xl border border-surface-200 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-xl border border-surface-200 overflow-hidden">
         <div className="p-6 border-b border-surface-200 flex flex-col sm:flex-row sm:items-start gap-5">
           <div className="relative w-[120px] h-[120px] shrink-0 cursor-pointer group" onClick={() => fileInputRef.current?.click()}>
             <Avatar src={form.current.profilePicture} name={fullName} size="lg" className="!w-[120px] !h-[120px] !text-3xl" />
@@ -190,7 +190,7 @@ function EmployeeDetail({ employeeId, onBack }: { employeeId: string; onBack: ()
         <div className="border-b border-surface-200 px-6">
           <nav className="flex gap-6 overflow-x-auto">
             {["Personal", "Job", "Salary", "Documents"].map((tab) => (
-              <button key={tab} onClick={() => setActiveTab(tab as Tab)} className={`py-3.5 text-sm whitespace-nowrap border-b-2 -mb-px transition-colors ${activeTab === tab ? "border-primary-700 text-surface-900 font-semibold" : "border-transparent text-surface-500 hover:text-surface-700"}`}>
+              <button key={tab} onClick={() => setActiveTab(tab as Tab)} className={`py-3.5 text-sm whitespace-nowrap border-b-2 -mb-px transition-colors ${activeTab === tab ? "border-surface-900 text-surface-900 font-semibold" : "border-transparent text-surface-500 hover:text-surface-700"}`}>
                 {tab}
               </button>
             ))}
@@ -208,7 +208,7 @@ function EmployeeDetail({ employeeId, onBack }: { employeeId: string; onBack: ()
               <Input type="date" label="Date of Birth" value={form.current.dateOfBirth} onChange={(e) => { form.current.dateOfBirth = e.target.value; }} />
               <div className="md:col-span-2">
                 <label className="block text-xs text-surface-400 uppercase tracking-wide font-medium mb-1">Address</label>
-                <textarea rows={3} value={form.current.address} onChange={(e) => { form.current.address = e.target.value; }} className="w-full px-3 py-2 border border-surface-300 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary-600" placeholder="Street, City, State, PIN" />
+                <textarea rows={3} value={form.current.address} onChange={(e) => { form.current.address = e.target.value; }} className="w-full px-3 py-2 border border-surface-300 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-surface-900 focus:border-surface-900" placeholder="Street, City, State, PIN" />
               </div>
             </div>
           )}
@@ -374,7 +374,7 @@ export default function AdminEmployeesPage() {
           <div className="h-6 bg-surface-200 rounded w-48" />
           <div className="h-10 bg-surface-200 rounded w-32" />
         </div>
-        <div className="bg-white rounded-xl border border-surface-200 shadow-sm p-5 animate-pulse h-64" />
+        <div className="bg-white rounded-xl border border-surface-200 p-5 h-64" />
       </div>
     );
   }
@@ -385,15 +385,15 @@ export default function AdminEmployeesPage() {
         <div className="flex flex-wrap gap-3">
           <div className="relative w-64">
             <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-            <input type="text" placeholder="Search by name or Employee ID…" value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-10 pr-4 py-2 border border-surface-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-primary-600" />
+            <input type="text" placeholder="Search by name or Employee ID…" value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-10 pr-4 py-2 border border-surface-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-surface-900 focus:border-surface-900" />
           </div>
-          <select value={deptFilter} onChange={(e) => setDeptFilter(e.target.value)} className="px-3 py-2 border border-surface-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-600"><option value="ALL">All Departments</option>{departments.map((d) => <option key={d} value={d}>{d}</option>)}</select>
-          <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)} className="px-3 py-2 border border-surface-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-600"><option value="ALL">All Roles</option><option value="EMPLOYEE">Employee</option><option value="ADMIN">Admin</option></select>
+          <select value={deptFilter} onChange={(e) => setDeptFilter(e.target.value)} className="px-3 py-2 border border-surface-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-surface-900"><option value="ALL">All Departments</option>{departments.map((d) => <option key={d} value={d}>{d}</option>)}</select>
+          <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)} className="px-3 py-2 border border-surface-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-surface-900"><option value="ALL">All Roles</option><option value="EMPLOYEE">Employee</option><option value="ADMIN">Admin</option></select>
         </div>
-        <Button onClick={() => setShowAddModal(true)}>Add Employee</Button>
+        <Button arrow onClick={() => setShowAddModal(true)}>Add Employee</Button>
       </div>
 
-      <div className="bg-white rounded-xl border border-surface-200 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-xl border border-surface-200 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -413,7 +413,7 @@ export default function AdminEmployeesPage() {
             </thead>
             <tbody>
               {filtered.length === 0 && (
-                <tr><td colSpan={7} className="py-12 text-center text-surface-400">No employees found</td></tr>
+                <tr><td colSpan={7} className="py-12 text-center text-sm text-surface-500">No employees found</td></tr>
               )}
               {filtered.map((emp) => {
                 const isOnLeave = todayAttendance.some((a) => a.status === "LEAVE" && a.employeeId === emp.id);
@@ -452,8 +452,8 @@ export default function AdminEmployeesPage() {
           <Input label="Employee ID" value={addForm.employeeId} onChange={(e) => setAddForm({ ...addForm, employeeId: e.target.value })} />
           <Input label="Department" value={addForm.department} onChange={(e) => setAddForm({ ...addForm, department: e.target.value })} />
           <Input label="Job Title" value={addForm.designation} onChange={(e) => setAddForm({ ...addForm, designation: e.target.value })} />
-          <div><label className="block text-sm font-medium text-surface-700 mb-1">Role</label><select value={addForm.role} onChange={(e) => setAddForm({ ...addForm, role: e.target.value })} className="w-full px-3 py-2.5 border border-surface-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-600"><option value="EMPLOYEE">Employee</option><option value="ADMIN">Admin</option></select></div>
-          <div className="flex justify-end gap-3 pt-2"><Button variant="ghost" onClick={() => setShowAddModal(false)}>Cancel</Button><Button onClick={handleAddSubmit} loading={addLoading}>Create Employee</Button></div>
+          <div><label className="block text-sm font-medium text-surface-700 mb-1">Role</label><select value={addForm.role} onChange={(e) => setAddForm({ ...addForm, role: e.target.value })} className="w-full px-3 py-2.5 border border-surface-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-surface-900 focus:border-surface-900"><option value="EMPLOYEE">Employee</option><option value="ADMIN">Admin</option></select></div>
+          <div className="flex justify-end gap-3 pt-2"><Button variant="ghost" onClick={() => setShowAddModal(false)}>Cancel</Button><Button arrow onClick={handleAddSubmit} loading={addLoading}>Create Employee</Button></div>
         </div>
       </Modal>
     </div>

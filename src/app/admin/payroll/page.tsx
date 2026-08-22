@@ -5,6 +5,7 @@ import Avatar from "@/components/ui/Avatar";
 import StatCard from "@/components/ui/StatCard";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
+import EmptyState from "@/components/ui/EmptyState";
 import { useToast } from "@/components/ui/Toast";
 
 interface PayrollRecord {
@@ -120,7 +121,7 @@ export default function AdminPayrollPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-surface-900">Payroll</h1>
+        <h1 className="text-xl font-bold text-surface-900 tracking-tight">Payroll</h1>
         <Button variant="secondary" onClick={handleExport}>
           <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -131,14 +132,12 @@ export default function AdminPayrollPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <StatCard
-          icon={<svg className="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>}
-          iconBg="bg-primary-100"
+          icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>}
           value={INR.format(totalPayroll)}
           label="Total Monthly Payroll"
         />
         <StatCard
-          icon={<svg className="w-5 h-5 text-success-text" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>}
-          iconBg="bg-success-light"
+          icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>}
           value={INR.format(avgSalary)}
           label="Average Salary"
         />
@@ -154,13 +153,13 @@ export default function AdminPayrollPage() {
             placeholder="Search by name or ID..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-surface-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-primary-600"
+            className="w-full pl-10 pr-4 py-2 border border-surface-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-surface-900 focus:border-surface-900"
           />
         </div>
         <select
           value={deptFilter}
           onChange={(e) => setDeptFilter(e.target.value)}
-          className="px-3 py-2 border border-surface-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-600"
+          className="px-3 py-2 border border-surface-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-surface-900 focus:border-surface-900"
         >
           <option value="ALL">All Departments</option>
           {departments.map((d) => (
@@ -169,22 +168,19 @@ export default function AdminPayrollPage() {
         </select>
       </div>
 
-      <div className="bg-white rounded-xl border border-surface-200 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-xl border border-surface-200 overflow-hidden">
         {loading ? (
           <div className="py-16 text-center text-sm text-surface-400 animate-pulse">Loading...</div>
         ) : filtered.length === 0 ? (
-          <div className="py-16 flex flex-col items-center justify-center text-center px-6">
-            <div className="w-12 h-12 rounded-full bg-surface-100 flex items-center justify-center text-surface-300 mb-3">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <EmptyState
+            icon={
+              <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
-            </div>
-            <p className="text-sm text-surface-400">
-              No payroll records
-              {deptFilter !== "ALL" ? ` in ${deptFilter}` : ""}
-              {search ? ` matching "${search}"` : ""}
-            </p>
-          </div>
+            }
+            title="No payroll records"
+            description="Payroll entries will show up here once they're set up."
+          />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -257,7 +253,7 @@ export default function AdminPayrollPage() {
                 type="number"
                 value={editForm.basicSalary}
                 onChange={(e) => setEditForm({ ...editForm, basicSalary: Number(e.target.value) || 0 })}
-                className="w-full px-3 py-2 border border-surface-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-primary-600"
+                className="w-full px-3 py-2 border border-surface-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-surface-900 focus:border-surface-900"
               />
             </div>
             <div>
@@ -266,7 +262,7 @@ export default function AdminPayrollPage() {
                 type="number"
                 value={editForm.hra}
                 onChange={(e) => setEditForm({ ...editForm, hra: Number(e.target.value) || 0 })}
-                className="w-full px-3 py-2 border border-surface-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-primary-600"
+                className="w-full px-3 py-2 border border-surface-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-surface-900 focus:border-surface-900"
               />
             </div>
             <div>
@@ -275,7 +271,7 @@ export default function AdminPayrollPage() {
                 type="number"
                 value={editForm.allowances}
                 onChange={(e) => setEditForm({ ...editForm, allowances: Number(e.target.value) || 0 })}
-                className="w-full px-3 py-2 border border-surface-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-primary-600"
+                className="w-full px-3 py-2 border border-surface-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-surface-900 focus:border-surface-900"
               />
             </div>
             <div>
@@ -284,7 +280,7 @@ export default function AdminPayrollPage() {
                 type="number"
                 value={editForm.deductions}
                 onChange={(e) => setEditForm({ ...editForm, deductions: Number(e.target.value) || 0 })}
-                className="w-full px-3 py-2 border border-surface-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-primary-600"
+                className="w-full px-3 py-2 border border-surface-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-surface-900 focus:border-surface-900"
               />
             </div>
           </div>
@@ -294,7 +290,7 @@ export default function AdminPayrollPage() {
           </div>
           <div className="flex justify-end gap-3 pt-2">
             <Button variant="ghost" onClick={() => setShowEdit(false)}>Cancel</Button>
-            <Button onClick={handleSave} loading={saving}>Save Changes</Button>
+            <Button arrow onClick={handleSave} loading={saving}>Save Changes</Button>
           </div>
         </div>
       </Modal>

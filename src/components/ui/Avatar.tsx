@@ -7,21 +7,6 @@ function getInitials(name: string) {
     .slice(0, 2);
 }
 
-const colors = [
-  "bg-primary-100 text-primary-700",
-  "bg-success-light text-success-text",
-  "bg-info-light text-info-text",
-  "bg-warning-light text-warning-text",
-  "bg-danger-light text-danger-text",
-  "bg-surface-200 text-surface-700",
-];
-
-function getColor(name: string) {
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  return colors[Math.abs(hash) % colors.length];
-}
-
 interface AvatarProps {
   src?: string | null;
   name: string;
@@ -44,7 +29,7 @@ export default function Avatar({ src, name, size = "md", className = "" }: Avata
 
   return (
     <div
-      className={`${sizes[size]} rounded-full flex items-center justify-center font-semibold ${getColor(name)} ${className}`}
+      className={`${sizes[size]} rounded-full flex items-center justify-center font-semibold bg-surface-900 text-white ${className}`}
     >
       {getInitials(name)}
     </div>

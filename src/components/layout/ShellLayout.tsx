@@ -13,7 +13,7 @@ export default function ShellLayout({ children, isAdmin = false }: { children: R
       <div className="min-h-screen bg-surface-50">
         <Sidebar isAdmin={isAdmin} mobileOpen={mobileOpen} onMobileClose={() => setMobileOpen(false)} />
         <TopBar onHamburgerClick={() => setMobileOpen(true)} />
-        <main className="lg:ml-sidebar p-4 md:p-6">
+        <main className="lg:ml-sidebar p-4 md:p-page-desktop min-w-0">
           {children}
         </main>
       </div>

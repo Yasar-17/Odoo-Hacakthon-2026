@@ -33,7 +33,7 @@ export default function Navbar() {
     <nav className="bg-white border-b border-surface-200 px-6 py-3">
       <div className="flex items-center justify-between max-w-7xl mx-auto">
         <Link href={isAdmin ? "/admin" : "/dashboard"} className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
+          <div className="w-8 h-8 bg-surface-900 rounded-lg flex items-center justify-center">
             <span className="text-white font-bold text-sm">D</span>
           </div>
           <span className="text-xl font-bold text-surface-900">Dayflow</span>
@@ -48,8 +48,8 @@ export default function Navbar() {
                   : user.email}
               </span>
               <span
-                className={`text-xs px-2 py-1 rounded-full ${
-                  isAdmin ? "bg-primary-100 text-primary-700" : "bg-accent-100 text-accent-700"
+                className={`text-xs px-2 py-1 rounded-full font-medium ${
+                  isAdmin ? "bg-surface-900 text-white" : "bg-accent-100 text-accent-700"
                 }`}
               >
                 {user.role}

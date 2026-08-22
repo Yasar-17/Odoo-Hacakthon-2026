@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Avatar from "@/components/ui/Avatar";
 import Button from "@/components/ui/Button";
+import EmptyState from "@/components/ui/EmptyState";
 import { useToast } from "@/components/ui/Toast";
 
 interface Employee {
@@ -32,19 +33,19 @@ interface ActivityItem {
 
 const activityIcons: Record<ActivityType, { icon: React.ReactNode; bg: string }> = {
   leave: {
-    bg: "bg-info-light text-info-text",
+    bg: "bg-surface-100 text-surface-700",
     icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />,
   },
   attendance: {
-    bg: "bg-success-light text-success-text",
+    bg: "bg-surface-100 text-surface-700",
     icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />,
   },
   profile: {
-    bg: "bg-primary-50 text-primary-700",
+    bg: "bg-surface-100 text-surface-700",
     icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />,
   },
   payroll: {
-    bg: "bg-warning-light text-warning-text",
+    bg: "bg-surface-100 text-surface-700",
     icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />,
   },
 };
@@ -62,7 +63,7 @@ function timeAgo(iso: string): string {
 
 function CardSkeleton() {
   return (
-    <div className="bg-white rounded-xl border border-surface-200 shadow-sm p-5 animate-pulse">
+    <div className="bg-white rounded-xl border border-surface-200 p-5 animate-pulse">
       <div className="flex items-center gap-3 mb-5">
         <div className="w-10 h-10 rounded-lg bg-surface-200" />
         <div className="space-y-2 flex-1">
@@ -160,7 +161,7 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((n) => <CardSkeleton key={n} />)}
         </div>
-        <div className="bg-white rounded-xl border border-surface-200 shadow-sm p-5 animate-pulse">
+        <div className="bg-white rounded-xl border border-surface-200 p-5 animate-pulse">
           <div className="h-4 bg-surface-200 rounded w-40 mb-5" />
           {[1, 2, 3].map((n) => (
             <div key={n} className="flex items-center gap-3 py-3 border-b border-surface-100 last:border-0">
@@ -179,8 +180,8 @@ export default function DashboardPage() {
       {/* Quick-access cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
         {/* Profile card */}
-        <div className="bg-white rounded-xl border border-surface-200 shadow-sm p-5 flex flex-col">
-          <div className="w-10 h-10 rounded-full bg-primary-50 text-primary-700 flex items-center justify-center mb-4">
+        <div className="bg-white rounded-xl border border-surface-200 p-5 flex flex-col">
+          <div className="w-10 h-10 rounded-lg bg-surface-900 text-white flex items-center justify-center mb-4">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
@@ -194,7 +195,7 @@ export default function DashboardPage() {
           </div>
           <Link
             href="/dashboard/profile"
-            className="mt-auto inline-flex items-center gap-1 text-sm font-medium text-primary-700 hover:text-primary-800"
+            className="mt-auto inline-flex items-center gap-1 text-sm font-medium text-surface-900 hover:underline"
           >
             View Profile
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -204,8 +205,8 @@ export default function DashboardPage() {
         </div>
 
         {/* Attendance card */}
-        <div className="bg-white rounded-xl border border-surface-200 shadow-sm p-5 flex flex-col">
-          <div className="w-10 h-10 rounded-full bg-success-light text-success-text flex items-center justify-center mb-4">
+        <div className="bg-white rounded-xl border border-surface-200 p-5 flex flex-col">
+          <div className="w-10 h-10 rounded-lg bg-surface-900 text-white flex items-center justify-center mb-4">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
@@ -225,6 +226,7 @@ export default function DashboardPage() {
             loading={actionLoading}
             disabled={hasCheckedOut}
             variant={hasCheckedIn ? "secondary" : "primary"}
+            arrow={!hasCheckedIn}
             className="mt-auto w-full"
           >
             {hasCheckedIn ? "Check Out" : "Check In"}
@@ -232,8 +234,8 @@ export default function DashboardPage() {
         </div>
 
         {/* Leave Requests card */}
-        <div className="bg-white rounded-xl border border-surface-200 shadow-sm p-5 flex flex-col">
-          <div className="w-10 h-10 rounded-full bg-info-light text-info-text flex items-center justify-center mb-4">
+        <div className="bg-white rounded-xl border border-surface-200 p-5 flex flex-col">
+          <div className="w-10 h-10 rounded-lg bg-surface-900 text-white flex items-center justify-center mb-4">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
@@ -251,8 +253,8 @@ export default function DashboardPage() {
         </div>
 
         {/* Quick stat card */}
-        <div className="bg-white rounded-xl border border-surface-200 shadow-sm p-5 flex flex-col">
-          <div className="w-10 h-10 rounded-full bg-warning-light text-warning-text flex items-center justify-center mb-4">
+        <div className="bg-white rounded-xl border border-surface-200 p-5 flex flex-col">
+          <div className="w-10 h-10 rounded-lg bg-surface-900 text-white flex items-center justify-center mb-4">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
             </svg>
@@ -264,7 +266,7 @@ export default function DashboardPage() {
           <p className="text-sm text-surface-500 mb-3">Present this month</p>
           <div className="mt-auto">
             <div className="h-1.5 bg-surface-100 rounded-full overflow-hidden">
-              <div className="h-full bg-success rounded-full transition-all" style={{ width: `${progressPercent}%` }} />
+              <div className="h-full bg-surface-900 rounded-full transition-all" style={{ width: `${progressPercent}%` }} />
             </div>
             <p className="text-xs text-surface-400 mt-1.5 font-mono">{progressPercent}%</p>
           </div>
@@ -272,20 +274,21 @@ export default function DashboardPage() {
       </div>
 
       {/* Recent activity */}
-      <div className="bg-white rounded-xl border border-surface-200 shadow-sm">
+      <div className="bg-white rounded-xl border border-surface-200">
         <div className="px-5 py-4 border-b border-surface-200">
           <h2 className="text-base font-semibold text-surface-900">Recent Activity</h2>
         </div>
 
         {recentActivity.length === 0 ? (
-          <div className="py-16 flex flex-col items-center justify-center text-center px-6">
-            <div className="w-12 h-12 rounded-full bg-surface-100 flex items-center justify-center text-surface-300 mb-3">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <EmptyState
+            icon={
+              <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-            </div>
-            <p className="text-sm text-surface-400">No recent activity</p>
-          </div>
+            }
+            title="No recent activity"
+            description="Your check-ins, leave requests, and updates will show up here."
+          />
         ) : (
           <ul>
             {recentActivity.map((item, i) => {
