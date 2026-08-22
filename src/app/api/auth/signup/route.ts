@@ -5,7 +5,7 @@ import { hashPassword, signToken, validatePassword, validateEmail } from "@/lib/
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { employeeId, email, password, role, firstName, lastName } = body;
+    const { employeeId, email, password, role, firstName, lastName, department, designation } = body;
 
     if (!employeeId || !email || !password) {
       return NextResponse.json(
@@ -52,6 +52,8 @@ export async function POST(req: NextRequest) {
           create: {
             firstName: firstName || "New",
             lastName: lastName || "Employee",
+            ...(department ? { department } : {}),
+            ...(designation ? { designation } : {}),
           },
         },
       },

@@ -27,7 +27,7 @@ export default function TopBar({ onHamburgerClick }: TopBarProps) {
   )?.[1] ?? "Dayflow";
 
   return (
-    <header className="sticky top-0 z-20 h-topbar bg-white border-b border-surface-200 flex items-center justify-between px-6">
+    <header className="sticky top-0 z-20 h-topbar bg-white border-b border-surface-200 flex items-center justify-between px-6 lg:ml-sidebar">
       <div className="flex items-center gap-3">
         <button
           onClick={onHamburgerClick}
