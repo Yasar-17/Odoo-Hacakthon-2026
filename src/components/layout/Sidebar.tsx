@@ -68,10 +68,7 @@ export default function Sidebar({ isAdmin, mobileOpen, onMobileClose }: SidebarP
   const sidebarContent = (
     <div className="flex flex-col h-full">
       {/* Logo */}
-      <div className="px-6 py-5 flex items-center gap-2.5">
-        <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center shrink-0">
-          <span className="text-white font-bold text-sm">D</span>
-        </div>
+      <div className="px-6 py-5">
         <span className="text-lg font-bold text-surface-900">Dayflow</span>
       </div>
 

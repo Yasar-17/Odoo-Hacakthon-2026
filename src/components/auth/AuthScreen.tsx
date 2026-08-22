@@ -15,6 +15,18 @@ const passwordRules = [
 export default function AuthScreen({ initialMode }: { initialMode: Mode }) {
   const router = useRouter();
   const [mode, setMode] = useState<Mode>(initialMode);
+  const [transitioning, setTransitioning] = useState(false);
+  const [visibleMode, setVisibleMode] = useState<Mode>(initialMode);
+
+  const switchMode = (newMode: Mode) => {
+    if (newMode === mode) return;
+    setTransitioning(true);
+    setTimeout(() => {
+      setMode(newMode);
+      setVisibleMode(newMode);
+      setTransitioning(false);
+    }, 200);
+  };
 
   const [signInEmail, setSignInEmail] = useState("");
   const [signInPassword, setSignInPassword] = useState("");
@@ -101,8 +113,13 @@ export default function AuthScreen({ initialMode }: { initialMode: Mode }) {
         setSignUpApiError(data.error || "Signup failed");
         return;
       }
-      setMode("signin");
-      setSignInEmail(signUpForm.email);
+      setTransitioning(true);
+      setTimeout(() => {
+        setMode("signin");
+        setVisibleMode("signin");
+        setSignInEmail(signUpForm.email);
+        setTransitioning(false);
+      }, 200);
     } catch {
       setSignUpApiError("Something went wrong. Please try again.");
     } finally {
@@ -127,10 +144,7 @@ export default function AuthScreen({ initialMode }: { initialMode: Mode }) {
         </div>
 
         {/* Logo */}
-        <div className="relative z-10 flex items-center gap-2">
-          <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm">D</span>
-          </div>
+        <div className="relative z-10">
           <span className="text-xl font-bold text-white">Dayflow</span>
         </div>
 
@@ -162,7 +176,7 @@ export default function AuthScreen({ initialMode }: { initialMode: Mode }) {
           {/* Tab Toggle */}
           <div className="flex bg-surface-200 rounded-lg p-1 mb-10">
             <button
-              onClick={() => setMode("signin")}
+              onClick={() => switchMode("signin")}
               className={`flex-1 py-2.5 text-sm font-medium rounded-md transition-all ${
                 mode === "signin"
                   ? "bg-white text-surface-900 shadow-sm"
@@ -172,7 +186,7 @@ export default function AuthScreen({ initialMode }: { initialMode: Mode }) {
               Sign In
             </button>
             <button
-              onClick={() => setMode("signup")}
+              onClick={() => switchMode("signup")}
               className={`flex-1 py-2.5 text-sm font-medium rounded-md transition-all ${
                 mode === "signup"
                   ? "bg-white text-surface-900 shadow-sm"
@@ -183,8 +197,14 @@ export default function AuthScreen({ initialMode }: { initialMode: Mode }) {
             </button>
           </div>
 
-          {/* Sign In Form */}
-          {mode === "signin" && (
+          {/* Forms with transition */}
+          <div
+            className={`transition-all duration-200 ease-in-out ${
+              transitioning ? "opacity-0 translate-y-2" : "opacity-100 translate-y-0"
+            }`}
+          >
+            {/* Sign In Form */}
+            {visibleMode === "signin" && (
             <div>
               <h1 className="text-2xl font-bold text-surface-900 mb-1">Welcome back</h1>
               <p className="text-surface-500 text-sm mb-8">Sign in to your account</p>
@@ -249,7 +269,7 @@ export default function AuthScreen({ initialMode }: { initialMode: Mode }) {
 
               <p className="text-center text-sm text-surface-500 mt-8">
                 Don&apos;t have an account?{" "}
-                <button onClick={() => setMode("signup")} className="text-surface-900 font-semibold hover:underline">
+                <button onClick={() => switchMode("signup")} className="text-surface-900 font-semibold hover:underline">
                   Sign up
                 </button>
               </p>
@@ -257,7 +277,7 @@ export default function AuthScreen({ initialMode }: { initialMode: Mode }) {
           )}
 
           {/* Sign Up Form */}
-          {mode === "signup" && (
+          {visibleMode === "signup" && (
             <div>
               <h1 className="text-2xl font-bold text-surface-900 mb-1">Create your account</h1>
               <p className="text-surface-500 text-sm mb-8">Get started with Dayflow</p>
@@ -384,12 +404,13 @@ export default function AuthScreen({ initialMode }: { initialMode: Mode }) {
 
               <p className="text-center text-sm text-surface-500 mt-8">
                 Already have an account?{" "}
-                <button onClick={() => setMode("signin")} className="text-surface-900 font-semibold hover:underline">
+                <button onClick={() => switchMode("signin")} className="text-surface-900 font-semibold hover:underline">
                   Sign in
                 </button>
               </p>
             </div>
           )}
+          </div>
         </div>
       </div>
     </div>
