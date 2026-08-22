@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, createContext, useContext, useCallback, useRef } from "react";
+import Icon from "@/components/ui/Icon";
 
 type ToastType = "success" | "error";
 
@@ -39,21 +40,13 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         {toasts.map((t) => (
           <div
             key={t.id}
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg border text-sm font-medium animate-slide-in ${
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl ambient-shadow border text-sm font-medium animate-slide-in ${
               t.type === "success"
-                ? "bg-success-light text-success-text border-green-200"
-                : "bg-danger-light text-danger-text border-red-200"
+                ? "bg-surface-pure text-success-text border-border-light"
+                : "bg-surface-pure text-danger-text border-border-light"
             }`}
           >
-            {t.type === "success" ? (
-              <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            ) : (
-              <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            )}
+            <Icon name={t.type === "success" ? "check_circle" : "error"} filled className="text-[18px]" />
             {t.message}
           </div>
         ))}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import Icon from "@/components/ui/Icon";
 
 interface ModalProps {
   isOpen: boolean;
@@ -32,26 +33,24 @@ export default function Modal({ isOpen, onClose, title, children, footer }: Moda
   return (
     <div
       ref={overlayRef}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-primary/20 backdrop-blur-sm p-4"
       onClick={(e) => {
         if (e.target === overlayRef.current) onClose();
       }}
     >
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-[480px] max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-surface-200">
-          <h2 className="text-base font-semibold text-surface-900">{title}</h2>
+      <div className="bg-surface-pure rounded-xl ambient-shadow w-full max-w-[480px] max-h-[90vh] overflow-y-auto scrollbar-thin">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-outline-variant">
+          <h2 className="font-headline text-headline-md text-primary">{title}</h2>
           <button
             onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-lg text-surface-400 hover:text-surface-600 hover:bg-surface-100 transition-colors"
+            className="w-8 h-8 flex items-center justify-center rounded-full text-secondary hover:text-primary hover:bg-surface-container-low transition-colors"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <Icon name="close" className="text-[20px]" />
           </button>
         </div>
-        <div className="px-6 py-4">{children}</div>
+        <div className="px-6 py-5">{children}</div>
         {footer && (
-          <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-surface-200">
+          <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-outline-variant">
             {footer}
           </div>
         )}

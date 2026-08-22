@@ -4,37 +4,29 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import StatusBadge from "@/components/ui/StatusBadge";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
+import Input from "@/components/ui/Input";
+import Select from "@/components/ui/Select";
+import PageHeader from "@/components/ui/PageHeader";
 import EmptyState from "@/components/ui/EmptyState";
+import Icon from "@/components/ui/Icon";
 import { useToast } from "@/components/ui/Toast";
 
 interface LeaveRecord {
-  id: string;
-  type: "PAID" | "SICK" | "UNPAID";
-  startDate: string;
-  endDate: string;
-  remarks: string | null;
-  status: "PENDING" | "APPROVED" | "REJECTED";
-  createdAt: string;
+  id: string; type: "PAID" | "SICK" | "UNPAID"; startDate: string; endDate: string;
+  remarks: string | null; status: "PENDING" | "APPROVED" | "REJECTED"; createdAt: string;
 }
 
-type LeaveType = LeaveRecord["type"];
+type LeaveType = "PAID" | "SICK";
 type Filter = "ALL" | LeaveRecord["status"];
 
-const BALANCES: Record<LeaveType, number> = { PAID: 12, SICK: 8, UNPAID: 15 };
-
-const typeMeta: Record<LeaveType, { label: string; accent: string; iconBg: string }> = {
-  PAID:   { label: "Paid",   accent: "bg-surface-900", iconBg: "bg-surface-100 text-surface-800" },
-  SICK:   { label: "Sick",   accent: "bg-surface-900", iconBg: "bg-surface-100 text-surface-800" },
-  UNPAID: { label: "Unpaid", accent: "bg-surface-900", iconBg: "bg-surface-100 text-surface-800" },
+const BALANCES: Record<LeaveType, number> = { PAID: 12, SICK: 8 };
+const typeMeta: Record<LeaveType, { label: string; icon: string }> = {
+  PAID: { label: "Paid", icon: "beach_access" },
+  SICK: { label: "Sick", icon: "sick" },
 };
 
-function daysBetween(start: string, end: string) {
-  return Math.floor((new Date(end).getTime() - new Date(start).getTime()) / 86_400_000) + 1;
-}
-
-function fmtDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-}
+function daysBetween(s: string, e: string) { return Math.floor((new Date(e).getTime() - new Date(s).getTime()) / 86_400_000) + 1; }
+function fmtDate(iso: string) { return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }); }
 
 export default function LeavePage() {
   const { toast } = useToast();
@@ -44,37 +36,24 @@ export default function LeavePage() {
   const [showApply, setShowApply] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState("");
-  const [form, setForm] = useState<{ type: LeaveType; startDate: string; endDate: string; remarks: string }>({
-    type: "PAID",
-    startDate: "",
-    endDate: "",
-    remarks: "",
-  });
+  const [form, setForm] = useState<{ type: LeaveType; startDate: string; endDate: string; remarks: string }>({ type: "PAID", startDate: "", endDate: "", remarks: "" });
 
   const fetchLeaves = useCallback(async () => {
     setLoading(true);
-    try {
-      const res = await fetch("/api/leave");
-      const data = await res.json();
-      if (data.success) setLeaves(data.data ?? []);
-    } catch {
-      setLeaves([]);
-    }
+    try { const res = await fetch("/api/leave"); const data = await res.json(); if (data.success) setLeaves(data.data ?? []); }
+    catch { setLeaves([]); }
     setLoading(false);
   }, []);
 
   useEffect(() => {
     fetchLeaves();
-    // Open apply modal when arriving via "Apply for Leave" quick action on dashboard
-    if (typeof window !== "undefined" && window.location.search.includes("apply=1")) {
-      setShowApply(true);
-    }
+    if (typeof window !== "undefined" && window.location.search.includes("apply=1")) setShowApply(true);
   }, [fetchLeaves]);
 
   const usedDays = useMemo(() => {
-    const used: Record<LeaveType, number> = { PAID: 0, SICK: 0, UNPAID: 0 };
+    const used: Record<LeaveType, number> = { PAID: 0, SICK: 0 };
     leaves.forEach((l) => {
-      if (l.status === "APPROVED" || l.status === "PENDING") {
+      if ((l.status === "APPROVED" || l.status === "PENDING") && (l.type === "PAID" || l.type === "SICK")) {
         used[l.type] += daysBetween(l.startDate, l.endDate);
       }
     });
@@ -86,133 +65,86 @@ export default function LeavePage() {
     return [...list].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }, [leaves, filter]);
 
-  const canSubmit =
-    !!form.startDate &&
-    !!form.endDate &&
-    daysBetween(form.startDate, form.endDate) > 0;
+  const canSubmit = !!form.startDate && !!form.endDate && daysBetween(form.startDate, form.endDate) > 0;
 
   const handleSubmit = async () => {
-    if (!canSubmit) {
-      setFormError("End date cannot be before start date");
-      return;
-    }
-    setFormError("");
-    setSubmitting(true);
+    if (!canSubmit) { setFormError("End date cannot be before start date"); return; }
+    setFormError(""); setSubmitting(true);
     try {
-      const res = await fetch("/api/leave", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
+      const res = await fetch("/api/leave", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
       const data = await res.json();
-      if (data.success) {
-        setShowApply(false);
-        toast("success", "Leave request submitted");
-        setForm({ type: "PAID", startDate: "", endDate: "", remarks: "" });
-        await fetchLeaves();
-      } else {
-        setFormError(data.error ?? "Failed to submit request");
-      }
-    } catch {
-      setFormError("Something went wrong");
-    }
+      if (data.success) { setShowApply(false); toast("success", "Leave request submitted"); setForm({ type: "PAID", startDate: "", endDate: "", remarks: "" }); await fetchLeaves(); }
+      else { setFormError(data.error ?? "Failed to submit request"); }
+    } catch { setFormError("Something went wrong"); }
     setSubmitting(false);
   };
 
   const filters: { key: Filter; label: string }[] = [
-    { key: "ALL", label: "All" },
-    { key: "PENDING", label: "Pending" },
-    { key: "APPROVED", label: "Approved" },
-    { key: "REJECTED", label: "Rejected" },
+    { key: "ALL", label: "All" }, { key: "PENDING", label: "Pending" },
+    { key: "APPROVED", label: "Approved" }, { key: "REJECTED", label: "Rejected" },
   ];
 
   return (
-    <div className="space-y-6">
-      {/* Balances + apply button */}
-      <div>
-        <div className="flex items-center justify-end mb-4">
-          <Button arrow onClick={() => setShowApply(true)}>Apply for Leave</Button>
-        </div>
+    <div className="flex flex-col gap-gutter">
+      <PageHeader title="Leave Requests" subtitle="Apply for time off and track your leave history.">
+        <Button arrow onClick={() => setShowApply(true)}>Apply for Leave</Button>
+      </PageHeader>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {(Object.keys(typeMeta) as LeaveType[]).map((type) => (
-            <div key={type} className="bg-white rounded-xl border border-surface-200 overflow-hidden">
-              <div className={`h-1 ${typeMeta[type].accent}`} />
-              <div className="p-5 flex items-start justify-between">
-                <div>
-                  <p className="text-sm text-surface-500">{typeMeta[type].label} Leave</p>
-                  <p className="text-3xl font-bold font-mono text-surface-900 mt-1">
-                    {Math.max(0, BALANCES[type] - usedDays[type])}
-                    <span className="text-sm font-normal text-surface-400 ml-1.5">days left</span>
-                  </p>
-                </div>
-                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${typeMeta[type].iconBg}`}>
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+        {(Object.keys(typeMeta) as LeaveType[]).map((type) => (
+          <div key={type} className="bg-surface-pure rounded-xl p-6 ambient-shadow border border-surface-variant">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-label-md text-secondary uppercase mb-1">{typeMeta[type].label} Leave</p>
+                <p className="font-headline text-headline-lg text-primary">
+                  {Math.max(0, BALANCES[type] - usedDays[type])}
+                  <span className="text-body-sm text-secondary ml-2">days left</span>
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-secondary-container rounded-lg text-on-secondary-container flex items-center justify-center">
+                <Icon name={typeMeta[type].icon} filled className="text-[24px]" />
               </div>
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
       </div>
 
-      {/* History table */}
-      <div className="bg-white rounded-xl border border-surface-200 overflow-hidden">
-        {/* Filter row */}
-        <div className="px-5 py-3 border-b border-surface-200 flex items-center justify-between gap-3">
-          <div className="inline-flex bg-surface-200 rounded-lg p-1">
+      <div className="bg-surface-pure rounded-xl border border-border-light overflow-hidden">
+        <div className="px-container-padding py-3 border-b border-border-light flex items-center justify-between gap-3">
+          <div className="flex gap-2 flex-wrap">
             {filters.map((f) => (
-              <button
-                key={f.key}
-                onClick={() => setFilter(f.key)}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
-                  filter === f.key
-                    ? "bg-white text-surface-900 shadow-sm"
-                    : "text-surface-500 hover:text-surface-700"
-                }`}
-              >
+              <button key={f.key} onClick={() => setFilter(f.key)}
+                className={`px-4 py-2 text-label-md uppercase tracking-wider rounded-lg transition-colors ${filter === f.key ? "bg-primary text-on-primary" : "bg-surface-container-low text-secondary hover:bg-surface-container-high"}`}>
                 {f.label}
               </button>
             ))}
           </div>
-          <span className="text-xs text-surface-400 hidden sm:block">Newest first</span>
+          <span className="text-label-md text-secondary uppercase hidden sm:block">Newest first</span>
         </div>
 
         {loading ? (
-          <div className="py-16 text-center text-sm text-surface-400">Loading…</div>
+          <div className="py-16 text-center text-body-sm text-secondary animate-pulse">Loading…</div>
         ) : filtered.length === 0 ? (
-          <EmptyState
-            icon={
-              <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            }
-            title={`No ${filter === "ALL" ? "" : filter.toLowerCase() + " "}leave requests`}
-            description="Leave requests you submit will be tracked here."
-          />
+          <EmptyState icon="date_range" title={`No ${filter === "ALL" ? "" : filter.toLowerCase() + " "}leave requests`} description="Leave requests you submit will be tracked here." />
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-surface-200 bg-surface-50">
-                  <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-surface-500">Type</th>
-                  <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-surface-500">Start Date</th>
-                  <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-surface-500">End Date</th>
-                  <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-surface-500">Days</th>
-                  <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-surface-500">Status</th>
-                  <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-surface-500">Remarks</th>
+                <tr className="border-b border-border-light bg-surface-subtle">
+                  {["Type", "Start Date", "End Date", "Days", "Status", "Remarks"].map((h, i) => (
+                    <th key={i} className="py-4 px-6 text-label-md text-secondary uppercase tracking-wider">{h}</th>
+                  ))}
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-border-light text-body-md">
                 {filtered.map((leave) => (
-                  <tr key={leave.id} className="border-b border-surface-100 last:border-0 hover:bg-surface-50 transition-colors">
-                    <td className="px-5 py-3.5 font-medium text-surface-900">{typeMeta[leave.type].label}</td>
-                    <td className="px-5 py-3.5 text-surface-600">{fmtDate(leave.startDate)}</td>
-                    <td className="px-5 py-3.5 text-surface-600">{fmtDate(leave.endDate)}</td>
-                    <td className="px-5 py-3.5 font-mono text-surface-900">{daysBetween(leave.startDate, leave.endDate)}</td>
-                    <td className="px-5 py-3.5"><StatusBadge status={leave.status} /></td>
-                    <td className="px-5 py-3.5 text-surface-500 max-w-[220px] truncate">{leave.remarks || "—"}</td>
+                  <tr key={leave.id} className="hover:bg-surface-container transition-colors">
+                    <td className="py-4 px-6 font-semibold text-primary">{typeMeta[leave.type as LeaveType]?.label ?? leave.type}</td>
+                    <td className="py-4 px-6 text-on-surface-variant">{fmtDate(leave.startDate)}</td>
+                    <td className="py-4 px-6 text-on-surface-variant">{fmtDate(leave.endDate)}</td>
+                    <td className="py-4 px-6 font-semibold text-primary">{daysBetween(leave.startDate, leave.endDate)}</td>
+                    <td className="py-4 px-6"><StatusBadge status={leave.status} /></td>
+                    <td className="py-4 px-6 text-secondary max-w-[220px] truncate">{leave.remarks || "—"}</td>
                   </tr>
                 ))}
               </tbody>
@@ -221,79 +153,22 @@ export default function LeavePage() {
         )}
       </div>
 
-      {/* Apply modal */}
-      <Modal
-        isOpen={showApply}
-        onClose={() => setShowApply(false)}
-        title="Apply for Leave"
-        footer={
-          <>
-            <Button variant="ghost" onClick={() => setShowApply(false)}>Cancel</Button>
-            <Button arrow onClick={handleSubmit} loading={submitting} disabled={!canSubmit}>
-              Submit Request
-            </Button>
-          </>
-        }
-      >
+      <Modal isOpen={showApply} onClose={() => setShowApply(false)} title="Apply for Leave"
+        footer={<><Button variant="ghost" onClick={() => setShowApply(false)}>Cancel</Button><Button arrow onClick={handleSubmit} loading={submitting} disabled={!canSubmit}>Submit Request</Button></>}>
         <div className="space-y-4">
-          {formError && (
-            <div className="bg-danger-light border border-red-200 text-danger-text text-sm rounded-lg px-4 py-3">
-              {formError}
-            </div>
-          )}
-
-          <div>
-            <label className="block text-sm font-medium text-surface-700 mb-1">Leave Type</label>
-            <select
-              value={form.type}
-              onChange={(e) => setForm({ ...form, type: e.target.value as LeaveType })}
-              className="w-full px-3 py-2.5 border border-surface-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-surface-900 focus:border-surface-900"
-            >
-              <option value="PAID">Paid</option>
-              <option value="SICK">Sick</option>
-              <option value="UNPAID">Unpaid</option>
-            </select>
-          </div>
-
+          {formError && <div className="bg-error-container text-on-error-container text-sm rounded px-4 py-3">{formError}</div>}
+          <Select label="Leave Type" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value as LeaveType })}>
+            <option value="PAID">Paid</option>
+            <option value="SICK">Sick</option>
+          </Select>
           <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-sm font-medium text-surface-700 mb-1">Start Date</label>
-              <input
-                type="date"
-                value={form.startDate}
-                onChange={(e) => setForm({ ...form, startDate: e.target.value })}
-                className={`w-full px-3 py-2.5 border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-surface-900 focus:border-surface-900 ${
-                  form.endDate && form.startDate && daysBetween(form.startDate, form.endDate) <= 0
-                    ? "border-danger"
-                    : "border-surface-300"
-                }`}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-surface-700 mb-1">End Date</label>
-              <input
-                type="date"
-                value={form.endDate}
-                min={form.startDate || undefined}
-                onChange={(e) => setForm({ ...form, endDate: e.target.value })}
-                className={`w-full px-3 py-2.5 border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-surface-900 focus:border-surface-900 ${
-                  form.endDate && form.startDate && daysBetween(form.startDate, form.endDate) <= 0
-                    ? "border-danger"
-                    : "border-surface-300"
-                }`}
-              />
-            </div>
+            <Input type="date" label="Start Date" value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.target.value })} />
+            <Input type="date" label="End Date" value={form.endDate} min={form.startDate || undefined} onChange={(e) => setForm({ ...form, endDate: e.target.value })} />
           </div>
-
           <div>
-            <label className="block text-sm font-medium text-surface-700 mb-1">Remarks</label>
-            <textarea
-              rows={3}
-              placeholder="Add a reason (optional)"
-              value={form.remarks}
-              onChange={(e) => setForm({ ...form, remarks: e.target.value })}
-              className="w-full px-3 py-2.5 border border-surface-300 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-surface-900 focus:border-surface-900"
-            />
+            <label className="block text-label-md uppercase tracking-wider text-secondary mb-2">Remarks</label>
+            <textarea rows={3} placeholder="Add a reason (optional)" value={form.remarks} onChange={(e) => setForm({ ...form, remarks: e.target.value })}
+              className="w-full bg-surface-pure border border-border-light px-4 py-3 rounded font-body-md text-body-md text-primary resize-none focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" />
           </div>
         </div>
       </Modal>

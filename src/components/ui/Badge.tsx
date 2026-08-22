@@ -9,13 +9,13 @@ const variants: Record<string, string> = {
   warning: "bg-warning-light text-warning-text",
   danger: "bg-danger-light text-danger-text",
   info: "bg-info-light text-info-text",
-  default: "bg-surface-100 text-surface-600",
+  default: "bg-secondary-container text-on-secondary-container",
 };
 
 export default function Badge({ variant = "default", children, className = "" }: BadgeProps) {
   return (
     <span
-      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${variants[variant]} ${className}`}
+      className={`inline-flex items-center px-3 py-1 rounded-full text-label-md ${variants[variant]} ${className}`}
     >
       {children}
     </span>
