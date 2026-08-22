@@ -197,14 +197,14 @@ export default function AuthScreen({ initialMode }: { initialMode: Mode }) {
             </button>
           </div>
 
-          {/* Forms with transition — both rendered so height stays constant */}
-          <div className="relative">
+          {/* Forms with transition — fixed height container, both absolute */}
+          <div className="relative" style={{ minHeight: "520px" }}>
             {/* Sign In Form */}
             <div
-              className={`transition-all duration-200 ease-in-out ${
+              className={`transition-all duration-200 ease-in-out absolute inset-0 ${
                 visibleMode === "signin"
-                  ? "opacity-100 translate-y-0 relative"
-                  : "opacity-0 -translate-y-2 absolute inset-0 pointer-events-none"
+                  ? "opacity-100 translate-y-0 pointer-events-auto"
+                  : "opacity-0 -translate-y-3 pointer-events-none"
               }`}
             >
               <h1 className="text-2xl font-bold text-surface-900 mb-1">Welcome back</h1>
@@ -278,10 +278,10 @@ export default function AuthScreen({ initialMode }: { initialMode: Mode }) {
 
           {/* Sign Up Form */}
             <div
-              className={`transition-all duration-200 ease-in-out ${
+              className={`transition-all duration-200 ease-in-out absolute inset-0 ${
                 visibleMode === "signup"
-                  ? "opacity-100 translate-y-0 relative"
-                  : "opacity-0 translate-y-2 absolute inset-0 pointer-events-none"
+                  ? "opacity-100 translate-y-0 pointer-events-auto"
+                  : "opacity-0 translate-y-3 pointer-events-none"
               }`}
             >
               <h1 className="text-2xl font-bold text-surface-900 mb-1">Create your account</h1>
