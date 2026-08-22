@@ -96,7 +96,7 @@ model LeaveRequest {
 
 model Payroll {
   id              String   @id @default(uuid())
-  employeeId      String   @unique
+  employeeId      String   
   employee        Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
   basicSalary     Float
   hra             Float
