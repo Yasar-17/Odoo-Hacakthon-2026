@@ -1,0 +1,112 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  EMPLOYEE
+  ADMIN
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  HALF_DAY
+  LEAVE
+}
+
+enum LeaveType {
+  PAID
+  SICK
+  UNPAID
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id           String   @id @default(uuid())
+  employeeId   String   @unique
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(EMPLOYEE)
+  createdAt    DateTime @default(now())
+  employee     Employee?
+}
+
+model Employee {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  firstName       String
+  lastName        String
+  dateOfBirth     DateTime?
+  gender          String?
+  department      String?
+  designation     String?
+  dateOfJoining   DateTime @default(now())
+  employmentType  String?
+  phone           String?
+  address         String?
+  profilePicture  String?
+  basicSalary     Float?
+  hra             Float?
+  allowances      Float?
+  deductions      Float?
+  bankName        String?
+  bankAccountNo   String?
+  ifscCode        String?
+  documents       String?
+  attendance      Attendance[]
+  leaveRequests   LeaveRequest[]
+  payroll         Payroll?
+}
+
+model Attendance {
+  id         String           @id @default(uuid())
+  employeeId String
+  employee   Employee         @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  date       DateTime         @db.Date
+  checkIn    DateTime?
+  checkOut   DateTime?
+  status     AttendanceStatus @default(PRESENT)
+
+  @@unique([employeeId, date])
+}
+
+model LeaveRequest {
+  id           String      @id @default(uuid())
+  employeeId   String
+  employee     Employee    @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  type         LeaveType
+  startDate    DateTime    @db.Date
+  endDate      DateTime    @db.Date
+  remarks      String?
+  status       LeaveStatus @default(PENDING)
+  adminComments String?
+  createdAt    DateTime    @default(now())
+}
+
+model Payroll {
+  id              String   @id @default(uuid())
+  employeeId      String   @unique
+  employee        Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  basicSalary     Float
+  hra             Float
+  allowances      Float
+  deductions      Float
+  netSalary       Float
+  month           Int
+  year            Int
+  status          String   @default("PENDING")
+  updatedAt       DateTime @updatedAt
+
+  @@unique([employeeId, month, year])
+}
