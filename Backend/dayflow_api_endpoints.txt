@@ -1,0 +1,90 @@
+DAYFLOW HRMS — API ENDPOINTS
+
+
+Base URL:
+  /api
+
+AUTHENTICATION:-
+
+POST   /api/auth/register
+POST   /api/auth/login
+POST   /api/auth/verify-email
+GET    /api/auth/me
+POST   /api/auth/logout
+
+EMPLOYEES :- 
+
+GET    /api/employees/me
+PATCH  /api/employees/me
+GET    /api/employees
+GET    /api/employees/:employeeId
+PATCH  /api/employees/:employeeId
+
+ATTENDANCE:-
+
+POST   /api/attendance/check-in
+POST   /api/attendance/check-out
+GET    /api/attendance/me
+GET    /api/attendance
+GET    /api/attendance/:employeeId
+
+LEAVE
+-----
+POST   /api/leaves
+GET    /api/leaves/me
+GET    /api/leaves
+GET    /api/leaves/:leaveId
+PATCH  /api/leaves/:leaveId/approve
+PATCH  /api/leaves/:leaveId/reject
+
+PAYROLL:-
+
+GET    /api/payroll/me
+GET    /api/payroll
+GET    /api/payroll/:employeeId
+PATCH  /api/payroll/:employeeId
+
+DASHBOARD:-
+GET    /api/dashboard/me
+GET    /api/dashboard/admin
+
+ROLE ACCESS:-
+
+PUBLIC:
+  POST /api/auth/register
+  POST /api/auth/login
+  POST /api/auth/verify-email
+
+EMPLOYEE:
+  /api/auth/me
+  /api/employees/me
+  /api/attendance/check-in
+  /api/attendance/check-out
+  /api/attendance/me
+  /api/leaves
+  /api/leaves/me
+  /api/payroll/me
+  /api/dashboard/me
+
+ADMIN / HR:
+  /api/employees
+  /api/attendance
+  /api/attendance/:employeeId
+  /api/leaves
+  /api/leaves/:leaveId/approve
+  /api/leaves/:leaveId/reject
+  /api/payroll
+  /api/payroll/:employeeId
+  /api/dashboard/admin
+
+DATABASE TABLE MAPPING:-
+
+AUTH        -> users, roles, user_roles
+EMPLOYEES   -> employees
+ATTENDANCE  -> attendance
+LEAVE       -> leave_requests, leave_approvals
+PAYROLL     -> salary_structures
+
+Note:
+These are the initial API endpoints/contracts for team integration.
+Request/response schemas and implementation will be defined separately.
