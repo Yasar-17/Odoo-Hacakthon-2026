@@ -130,7 +130,7 @@ export default function AuthScreen({ initialMode }: { initialMode: Mode }) {
   return (
     <div className="flex min-h-screen">
       {/* Left Panel */}
-      <div className="relative w-[45%] bg-[#0a0a0a] flex flex-col justify-between p-10 overflow-hidden">
+      <div className="relative w-[45%] bg-[#0a0a0a] flex flex-col justify-between p-10 overflow-hidden sticky top-0 h-screen">
         {/* Geometric pattern overlay */}
         <div className="absolute inset-0 opacity-[0.04]">
           <svg width="100%" height="100%">
@@ -171,7 +171,7 @@ export default function AuthScreen({ initialMode }: { initialMode: Mode }) {
       </div>
 
       {/* Right Panel */}
-      <div className="w-[55%] bg-[#f8f8f8] flex items-center justify-center p-10">
+      <div className="w-[55%] bg-[#f8f8f8] flex items-center justify-center p-10 h-screen overflow-y-auto">
         <div className="w-full max-w-[420px]">
           {/* Tab Toggle */}
           <div className="flex bg-surface-200 rounded-lg p-1 mb-10">
