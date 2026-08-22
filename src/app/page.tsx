@@ -13,16 +13,10 @@ export default function LandingPage() {
           <span className="text-2xl font-bold text-surface-900">Dayflow</span>
         </div>
         <div className="flex items-center gap-3">
-          <Link
-            href="/signin"
-            className="px-5 py-2 text-sm font-medium text-surface-700 hover:text-primary-600 transition-colors"
-          >
+          <Link href="/signin" className="btn-cta !text-sm !py-2 !px-5 !my-0">
             Log in
           </Link>
-          <Link
-            href="/signup"
-            className="px-5 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors"
-          >
+          <Link href="/signup" className="btn-cta !text-sm !py-2 !px-5 !my-0">
             Sign up
           </Link>
         </div>
@@ -43,53 +37,36 @@ export default function LandingPage() {
             processing — so your HR team can focus on what matters.
           </p>
           <div className="flex items-center justify-center gap-4">
-            <Link
-              href="/signup"
-              className="px-8 py-3 text-base font-semibold text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors shadow-lg shadow-primary-600/25"
-            >
+            <Link href="/signup" className="btn-cta">
               Get started free
             </Link>
-            <Link
-              href="/signin"
-              className="px-8 py-3 text-base font-semibold text-surface-700 bg-white border border-surface-300 rounded-lg hover:bg-surface-50 transition-colors"
-            >
+            <Link href="/signin" className="btn-cta">
               Log in
             </Link>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[
-            {
-              title: "Attendance",
-              desc: "Daily and weekly tracking with check-in/check-out, live status, and admin overview.",
-              icon: "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z",
-            },
-            {
-              title: "Leave Management",
-              desc: "Employees apply, admins approve — all with status tracking and comments.",
-              icon: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z",
-            },
-            {
-              title: "Payroll",
-              desc: "Structured salary breakdowns, editable by admins, read-only for employees.",
-              icon: "M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z",
-            },
-          ].map((feature) => (
-            <div
-              key={feature.title}
-              className="bg-white rounded-xl border border-surface-200 p-8 shadow-sm hover:shadow-md transition-shadow"
-            >
-              <div className="w-11 h-11 bg-primary-50 rounded-lg flex items-center justify-center mb-4">
-                <svg className="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={feature.icon} />
-                </svg>
-              </div>
-              <h3 className="text-lg font-semibold text-surface-900 mb-2">{feature.title}</h3>
-              <p className="text-sm text-surface-500 leading-relaxed">{feature.desc}</p>
+        {/* CTA Banner */}
+        <section className="relative overflow-hidden rounded-2xl border border-surface-200">
+          <div className="absolute inset-0 dot-pattern bg-surface-50 opacity-60" />
+          <div className="absolute inset-0 grid-pattern" />
+          <div className="relative z-10 text-center py-20 px-8">
+            <h2 className="text-3xl md:text-4xl font-extrabold text-surface-900 mb-4">
+              Ready to simplify your HR workflow?
+            </h2>
+            <p className="text-surface-500 text-lg max-w-xl mx-auto mb-8">
+              Join teams that trust Dayflow for attendance, leave, and payroll management.
+            </p>
+            <div className="flex items-center justify-center gap-4">
+              <Link href="/signup" className="btn-cta">
+                Start for free
+              </Link>
+              <Link href="/signin" className="btn-cta">
+                Log in
+              </Link>
             </div>
-          ))}
-        </div>
+          </div>
+        </section>
       </main>
 
       <footer className="text-center py-6 text-sm text-surface-400 border-t border-surface-100">
