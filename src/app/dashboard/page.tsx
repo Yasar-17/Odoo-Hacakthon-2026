@@ -186,7 +186,7 @@ export default function DashboardPage() {
             </svg>
           </div>
           <div className="flex items-center gap-3 mb-4">
-            <Avatar src={employee?.profilePicture} name={fullName} size="lg" />
+            <Avatar src={employee?.profilePicture} name={fullName} size="lg" className="!w-16 !h-16" />
             <div className="min-w-0">
               <p className="font-semibold text-surface-900 truncate">{fullName}</p>
               <p className="text-sm text-surface-500 truncate">{employee?.designation || "—"}</p>
@@ -242,8 +242,11 @@ export default function DashboardPage() {
             <span className="text-3xl font-bold font-mono text-surface-900">{pendingLeaves}</span>
             <p className="text-sm text-surface-500 mt-0.5">Pending Requests</p>
           </div>
-          <Link href="/dashboard/leave?apply=1" className="mt-auto">
-            <Button variant="secondary" className="w-full">Apply for Leave</Button>
+          <Link
+            href="/dashboard/leave?apply=1"
+            className="mt-auto w-full inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-lg bg-surface-100 text-surface-700 border border-surface-300 hover:bg-surface-200 transition-colors"
+          >
+            Apply for Leave
           </Link>
         </div>
 
